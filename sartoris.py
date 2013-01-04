@@ -74,6 +74,64 @@ def parseargs(argv):
     (opts, args) = parser.parse_args(args=argv[1:])
     return (opts, args)
 
+def start():
+    """
+        * write a lock file
+        * add a start tag
+    """
+    raise NotImplementedError()
+
+def abort():
+    """
+        * reset state back to start tag
+        * remove lock file
+    """
+    raise NotImplementedError()
+
+def sync():
+    """
+        * add a sync tag
+        * write a .deploy file with the tag information
+        * call a sync hook with the prefix (repo) and tag info
+    """
+    raise NotImplementedError()
+
+def resync():
+    """
+        * write a lock file
+        * call sync hook with the prefix (repo) and tag info
+        * remove lock file
+    """
+    raise NotImplementedError()
+
+def revert():
+    """
+        * write a lock file
+        * write previous deploy info into .deploy
+        * call sync hook with the prefix (repo) and tag info
+        * remove lock file
+    """
+    raise NotImplementedError()
+
+def show_tag():
+    """
+        * display current tagged release
+    """
+    raise NotImplementedError()
+
+def log():
+    """
+        * show last x deploys
+    """
+    raise NotImplementedError()
+
+def diff():
+    """
+        * show a git diff of the last deploy and it's previous deploy
+    """
+    raise NotImplementedError()
+
+
 def main(argv, out=None, err=None):
     """Main entry point.
 
