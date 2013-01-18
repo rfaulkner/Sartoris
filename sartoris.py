@@ -98,13 +98,15 @@ def start():
     # Add tags
     # match = search(r'[0-9a-zA-z].*/)', s)
     try:
-        repo_name = os.popen('git remote -v').read().split('/')[-1].split('.git')[0]
+        repo_name = os.popen('git remote -v').read().split('/')[-1].split(
+            '.git')[0]
     except KeyError:
         exit_code = 1
         logging.error(__name__ + '::' + exit_codes[exit_code])
         return exit_code
 
-    _tag = "".join(['start-',repo_name,'-',datetime.now().strftime(DATE_TIME_TAG_FORMAT)]) # construct a tag
+    _tag = "".join(['start-',repo_name,'-',datetime.now().strftime(
+        DATE_TIME_TAG_FORMAT)]) # construct a tag
     os.system('git tag -a %(tag)s' % { 'tag' : _tag} )
 
 def abort():
@@ -188,7 +190,8 @@ def main(argv, out=None, err=None):
     try:
         eval(args[0] + '()')
     except NameError:
-        logging.error(__name__ + '::No function called %(func)s.' % {'func' : str(args[0])})
+        logging.error(__name__ + '::No function called %(func)s.' % {
+            'func' : str(args[0])})
 
 
 if __name__ == "__main__": # pragma: nocover
