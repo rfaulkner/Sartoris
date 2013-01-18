@@ -28,6 +28,7 @@ import datetime
 import dulwich
 import logging
 import optparse
+import os
 import sys
 import subprocess
 from dulwich.config import StackedConfig
