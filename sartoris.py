@@ -151,7 +151,7 @@ def show_tag():
     """
     raise NotImplementedError()
 
-def log():
+def log_deploys():
     """
         * show last x deploys
     """
