@@ -89,8 +89,12 @@ def start():
         * write a lock file
         * add a start tag
     """
+    # @TODO use dulwich package implement git functionality rather
+    #       than shell commands - http://www.samba.org/~jelmer/dulwich/
+
 
     # Create lock file - check if it already exists
+    # @TODO catch exceptions for any os callable attributes
     if 'lock' in os.listdir('.git/deploy'):
         exit_code = 2
         log.error(__name__ + '::' + exit_codes[exit_code])
@@ -110,8 +114,10 @@ def start():
         return exit_code
 
     log.info(__name__ + '::Adding `start` tag for repo.')
-    os.system('git tag -a {0}-start-{1}'.format(repo_name,
-        datetime.now().strftime(DATE_TIME_TAG_FORMAT)))
+    os.system('git tag -a {0}-start-{1} -m "{2}"'.format(
+        repo_name,
+        datetime.now().strftime(DATE_TIME_TAG_FORMAT),
+        'Tag for {0}'.format(repo_name)))
 
 def abort():
     """
@@ -173,7 +179,6 @@ def main(argv, out=None, err=None):
     :param out: stream to write messages; :data:`sys.stdout` if None.
     :param err: stream to write error messages; :data:`sys.stderr` if None.
     """
-    print dir(log)
     if out is None: # pragma: nocover
         out = sys.stdout
     if err is None: # pragma: nocover
@@ -194,8 +199,10 @@ def main(argv, out=None, err=None):
     # Inline call to functionality
     #
     # @TODO: modify usage to avoid eval.
-    #       1. Create a singleton class `Sartoris` which contains all of the git-deploy methods
-    #       2. qualify args with `Sartoris` via duck-typing (e.g. hasattr, getattr, __callable__)
+    #       1. Create a singleton class `Sartoris` which contains all of the
+    #           git-deploy methods
+    #       2. qualify args with `Sartoris` via duck-typing (e.g. hasattr,
+    #           getattr, __callable__)
     #
     try:
         eval(args[0] + '()')
