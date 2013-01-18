@@ -27,6 +27,17 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.\
 import logging
 import optparse
 import sys
+import os
+from datetime import datetime
+from re import search
+import dulwich
+
+exit_codes = {
+    1 : 'Operation failed.  Exiting.'
+}
+
+# Module level attribute for tagging datetime format
+DATE_TIME_TAG_FORMAT = '%Y%m%d-%H%M%S'
 
 # NullHandler was added in Python 3.1.
 try:
