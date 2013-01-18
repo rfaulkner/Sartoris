@@ -90,7 +90,22 @@ def start():
         * write a lock file
         * add a start tag
     """
-    raise NotImplementedError()
+    # Prepare lock file
+    lock_file_handle = ''
+    with open(lock_file_handle,'wb') as file_obj:
+        file_obj.write('') # Write something to the lock file
+
+    # Add tags
+    # match = search(r'[0-9a-zA-z].*/)', s)
+    try:
+        repo_name = os.popen('git remote -v').read().split('/')[-1].split('.git')[0]
+    except KeyError:
+        exit_code = 1
+        logging.error(__name__ + '::' + exit_codes[exit_code])
+        return exit_code
+
+    _tag = "".join(['start-',repo_name,'-',datetime.now().strftime(DATE_TIME_TAG_FORMAT)]) # construct a tag
+    os.system('git tag -a %(tag)s' % { 'tag' : _tag} )
 
 def abort():
     """
