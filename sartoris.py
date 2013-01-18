@@ -29,11 +29,10 @@ import optparse
 import sys
 import os
 from datetime import datetime
-from re import search
-import dulwich
 
 exit_codes = {
-    1 : 'Operation failed.  Exiting.'
+    1 : 'Operation failed.  Exiting.',
+    2 : 'Lock file already exists.  Exiting.'
 }
 
 # Module level attribute for tagging datetime format
@@ -90,24 +89,29 @@ def start():
         * write a lock file
         * add a start tag
     """
-    # Prepare lock file
-    lock_file_handle = ''
-    with open(lock_file_handle,'wb') as file_obj:
-        file_obj.write('') # Write something to the lock file
 
-    # Add tags
-    # match = search(r'[0-9a-zA-z].*/)', s)
+    # Create lock file - check if it already exists
+    if 'lock' in os.listdir('.git/deploy'):
+        exit_code = 2
+        log.error(__name__ + '::' + exit_codes[exit_code])
+        return exit_code
+
+    lock_file_handle = '.git/deploy/lock'
+    log.info(__name__ + '::Creating lock file.')
+    os.system('touch {0}'.format(lock_file_handle))
+
+    # Add tags.  First retrieve the repository name then build the tag.
     try:
         repo_name = os.popen('git remote -v').read().split('/')[-1].split(
             '.git')[0]
     except KeyError:
-        exit_code = 1
-        logging.error(__name__ + '::' + exit_codes[exit_code])
+        exit_code = 2
+        log.error(__name__ + '::' + exit_codes[exit_code])
         return exit_code
 
-    _tag = "".join(['start-',repo_name,'-',datetime.now().strftime(
-        DATE_TIME_TAG_FORMAT)]) # construct a tag
-    os.system('git tag -a %(tag)s' % { 'tag' : _tag} )
+    log.info(__name__ + '::Adding `start` tag for repo.')
+    os.system('git tag -a {0}-start-{1}'.format(repo_name,
+        datetime.now().strftime(DATE_TIME_TAG_FORMAT)))
 
 def abort():
     """
@@ -169,6 +173,7 @@ def main(argv, out=None, err=None):
     :param out: stream to write messages; :data:`sys.stdout` if None.
     :param err: stream to write error messages; :data:`sys.stderr` if None.
     """
+    print dir(log)
     if out is None: # pragma: nocover
         out = sys.stdout
     if err is None: # pragma: nocover
@@ -187,6 +192,11 @@ def main(argv, out=None, err=None):
     log.debug("Ready to run")
 
     # Inline call to functionality
+    #
+    # @TODO: modify usage to avoid eval.
+    #       1. Create a singleton class `Sartoris` which contains all of the git-deploy methods
+    #       2. qualify args with `Sartoris` via duck-typing (e.g. hasattr, getattr, __callable__)
+    #
     try:
         eval(args[0] + '()')
     except NameError:
