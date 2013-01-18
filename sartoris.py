@@ -88,7 +88,7 @@ def abort():
     """
     raise NotImplementedError()
 
-def sync():
+def sync(): # -> fetch, finish, checkout
     """
         * add a sync tag
         * write a .deploy file with the tag information
@@ -157,6 +157,13 @@ def main(argv, out=None, err=None):
     log.setLevel(level)
 
     log.debug("Ready to run")
+
+    # Inline call to functionality
+    try:
+        eval(args[0] + '()')
+    except NameError:
+        logging.error(__name__ + '::No function called %(func)s.' % {'func' : str(args[0])})
+
 
 if __name__ == "__main__": # pragma: nocover
     sys.exit(main(sys.argv))
