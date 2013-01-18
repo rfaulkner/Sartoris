@@ -101,25 +101,32 @@ def sync(no_deps=False,force=False):
     """
     #TODO: do git calls in dulwich, rather than shelling out
     #TODO: get all configuration via a function, and get it during main
+    if 'lock' not in os.listdir('.git/deploy'):
+        exit_code = 20
+        log.error("{0}::{1}".format(__name__, exit_codes[exit_code])
+        return exit_code
     sc = StackedConfig(StackedConfig.default_backends())
     try:
         hook_dir = sc.get('deploy','hook-dir')
     except KeyError:
-        log.error('Failed to pull deploy.hook-dir from configuration')
-        sys.exit(1)
+        exit_code = 21
+        log.error("{0}::{1}".format(__name__, exit_codes[exit_code])
+        return exit_code
     try:
         repo_name = sc.get('deploy','tag-prefix')
     except KeyError:
-        log.error('Failed to pull deploy.tag-prefix from configuration')
-        sys.exit(1)
+        exit_code = 22
+        log.error("{0}::{1}".format(__name__, exit_codes[exit_code])
+        return exit_code
     sync_dir = '{0}/sync'.format(hook_dir)
     sync_script = '{0}/{1}.sync'.format(sync_dir, repo_name)
     _tag = "{0}-sync-{1}".format(repo_name,
                                  datetime.now().strftime(DATE_TIME_TAG_FORMAT))
     proc = subprocess.Popen(['/usr/bin/git tag', '-a', _tag])
     if proc.returncode != 0:
-        log.error('Failed to write sync tag')
-        sys.exit(1)
+        exit_code = 23
+        log.error("{0}::{1}".format(__name__, exit_codes[exit_code])
+        return exit_code
     #TODO: use a pluggable sync system rather than shelling out
     if os.path.exists(sync_script):
         proc = subprocess.Popen([sync_script,
@@ -128,8 +135,9 @@ def sync(no_deps=False,force=False):
                                  '--force="{0}"'.format(force)])
         log.info(proc.stdout.read())
         if proc.returncode != 0:
-            log.error('Sync script "{0}" failed to run'.format(sync_script))
-            sys.exit(1)
+            exit_code = 24
+            log.error("{0}::{1}".format(__name__, exit_codes[exit_code])
+            return exit_code
 
 def resync():
     """
