@@ -122,7 +122,10 @@ def sync(no_deps=False,force=False):
         sys.exit(1)
     #TODO: use a pluggable sync system rather than shelling out
     if os.path.exists(sync_script):
-        proc = subprocess.Popen([sync_script, repo_name, tag, force])
+        proc = subprocess.Popen([sync_script,
+                                 '--repo="{0}"'.format(repo_name),
+                                 '--tag="{0}"'.format(_tag),
+                                 '--force="{0}"'.format(force)])
         log.info(proc.stdout.read())
         if proc.returncode != 0:
             log.error('Sync script "{0}" failed to run'.format(sync_script))
