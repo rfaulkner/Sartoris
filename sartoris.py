@@ -24,9 +24,14 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.\
 """
 
+import datetime
+import dulwich
 import logging
 import optparse
+import os
 import sys
+import subprocess
+from dulwich.config import StackedConfig
 
 # NullHandler was added in Python 3.1.
 try:
@@ -88,13 +93,51 @@ def abort():
     """
     raise NotImplementedError()
 
-def sync():
+def sync(no_deps=False,force=False):
     """
         * add a sync tag
         * write a .deploy file with the tag information
         * call a sync hook with the prefix (repo) and tag info
     """
-    raise NotImplementedError()
+    #TODO: do git calls in dulwich, rather than shelling out
+    #TODO: get all configuration via a function, and get it during main
+    if 'lock' not in os.listdir('.git/deploy'):
+        exit_code = 20
+        log.error("{0}::{1}".format(__name__, exit_codes[exit_code])
+        return exit_code
+    sc = StackedConfig(StackedConfig.default_backends())
+    try:
+        hook_dir = sc.get('deploy','hook-dir')
+    except KeyError:
+        exit_code = 21
+        log.error("{0}::{1}".format(__name__, exit_codes[exit_code])
+        return exit_code
+    try:
+        repo_name = sc.get('deploy','tag-prefix')
+    except KeyError:
+        exit_code = 22
+        log.error("{0}::{1}".format(__name__, exit_codes[exit_code])
+        return exit_code
+    sync_dir = '{0}/sync'.format(hook_dir)
+    sync_script = '{0}/{1}.sync'.format(sync_dir, repo_name)
+    _tag = "{0}-sync-{1}".format(repo_name,
+                                 datetime.now().strftime(DATE_TIME_TAG_FORMAT))
+    proc = subprocess.Popen(['/usr/bin/git tag', '-a', _tag])
+    if proc.returncode != 0:
+        exit_code = 23
+        log.error("{0}::{1}".format(__name__, exit_codes[exit_code])
+        return exit_code
+    #TODO: use a pluggable sync system rather than shelling out
+    if os.path.exists(sync_script):
+        proc = subprocess.Popen([sync_script,
+                                 '--repo="{0}"'.format(repo_name),
+                                 '--tag="{0}"'.format(_tag),
+                                 '--force="{0}"'.format(force)])
+        log.info(proc.stdout.read())
+        if proc.returncode != 0:
+            exit_code = 24
+            log.error("{0}::{1}".format(__name__, exit_codes[exit_code])
+            return exit_code
 
 def resync():
     """
