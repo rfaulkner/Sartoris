@@ -106,22 +106,22 @@ def start():
 
     lock_file_handle = '.git/deploy/lock'
     log.info(__name__ + '::Creating lock file.')
-    os.system('touch {0}'.format(lock_file_handle))
+    subprocess.call(['touch',lock_file_handle])
 
     # Add tags.  First retrieve the repository name then build the tag.
     try:
-        repo_name = os.popen('git remote -v').read().split('/')[-1].split(
-            '.git')[0]
+        repo_name = subprocess.Popen(['git', 'remote','-v'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE).stdout.readline().strip().split(
+            '/')[-1].split('.git')[0]
     except KeyError:
         exit_code = 2
         log.error(__name__ + '::' + exit_codes[exit_code])
         return exit_code
 
     log.info(__name__ + '::Adding `start` tag for repo.')
-    os.system('git tag -a {0}-start-{1} -m "{2}"'.format(
-        repo_name,
-        datetime.now().strftime(DATE_TIME_TAG_FORMAT),
-        'Tag for {0}'.format(repo_name)))
+    _tag = '{0}-start-{1}'.format(repo_name, datetime.now().strftime(DATE_TIME_TAG_FORMAT))
+    subprocess.call(['git', 'tag', '-a', _tag,'-m', '"Tag for {0}"'.format(repo_name)])
 
 def abort():
     """
