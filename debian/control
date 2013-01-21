@@ -16,3 +16,5 @@ Depends: python-pyinotify
          sartoris-common
 Architecture: all
 Description: Daemon which will track and seed repositories
+
+# TODO: Add package for sartoris-salt
