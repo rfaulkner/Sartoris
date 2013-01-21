@@ -24,12 +24,22 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.\
 """
 
-import datetime
-import dulwich
 import logging
 import optparse
 import os
 import sys
+import subprocess
+from dulwich.config import StackedConfig
+from datetime import datetime
+
+exit_codes = {
+    1 : 'Operation failed.  Exiting.',
+    2 : 'Lock file already exists.  Exiting.'
+}
+
+# Module level attribute for tagging datetime format
+DATE_TIME_TAG_FORMAT = '%Y%m%d-%H%M%S'
+
 import subprocess
 from dulwich.config import StackedConfig
 
@@ -84,7 +94,35 @@ def start():
         * write a lock file
         * add a start tag
     """
-    raise NotImplementedError()
+    # @TODO use dulwich package implement git functionality rather
+    #       than shell commands - http://www.samba.org/~jelmer/dulwich/
+
+
+    # Create lock file - check if it already exists
+    # @TODO catch exceptions for any os callable attributes
+    if 'lock' in os.listdir('.git/deploy'):
+        exit_code = 2
+        log.error(__name__ + '::' + exit_codes[exit_code])
+        return exit_code
+
+    lock_file_handle = '.git/deploy/lock'
+    log.info(__name__ + '::Creating lock file.')
+    subprocess.call(['touch',lock_file_handle])
+
+    # Add tags.  First retrieve the repository name then build the tag.
+    try:
+        repo_name = subprocess.Popen(['git', 'remote','-v'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE).stdout.readline().strip().split(
+            '/')[-1].split('.git')[0]
+    except KeyError:
+        exit_code = 2
+        log.error(__name__ + '::' + exit_codes[exit_code])
+        return exit_code
+
+    log.info(__name__ + '::Adding `start` tag for repo.')
+    _tag = '{0}-start-{1}'.format(repo_name, datetime.now().strftime(DATE_TIME_TAG_FORMAT))
+    subprocess.call(['git', 'tag', '-a', _tag,'-m', '"Tag for {0}"'.format(repo_name)])
 
 def abort():
     """
@@ -103,20 +141,20 @@ def sync(no_deps=False,force=False):
     #TODO: get all configuration via a function, and get it during main
     if 'lock' not in os.listdir('.git/deploy'):
         exit_code = 20
-        log.error("{0}::{1}".format(__name__, exit_codes[exit_code])
+        log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
         return exit_code
     sc = StackedConfig(StackedConfig.default_backends())
     try:
         hook_dir = sc.get('deploy','hook-dir')
     except KeyError:
         exit_code = 21
-        log.error("{0}::{1}".format(__name__, exit_codes[exit_code])
+        log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
         return exit_code
     try:
         repo_name = sc.get('deploy','tag-prefix')
     except KeyError:
         exit_code = 22
-        log.error("{0}::{1}".format(__name__, exit_codes[exit_code])
+        log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
         return exit_code
     sync_dir = '{0}/sync'.format(hook_dir)
     sync_script = '{0}/{1}.sync'.format(sync_dir, repo_name)
@@ -125,7 +163,7 @@ def sync(no_deps=False,force=False):
     proc = subprocess.Popen(['/usr/bin/git tag', '-a', _tag])
     if proc.returncode != 0:
         exit_code = 23
-        log.error("{0}::{1}".format(__name__, exit_codes[exit_code])
+        log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
         return exit_code
     #TODO: use a pluggable sync system rather than shelling out
     if os.path.exists(sync_script):
@@ -136,7 +174,7 @@ def sync(no_deps=False,force=False):
         log.info(proc.stdout.read())
         if proc.returncode != 0:
             exit_code = 24
-            log.error("{0}::{1}".format(__name__, exit_codes[exit_code])
+            log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
             return exit_code
 
 def resync():
@@ -162,7 +200,7 @@ def show_tag():
     """
     raise NotImplementedError()
 
-def log():
+def log_deploys():
     """
         * show last x deploys
     """
@@ -200,6 +238,21 @@ def main(argv, out=None, err=None):
     log.setLevel(level)
 
     log.debug("Ready to run")
+
+    # Inline call to functionality
+    #
+    # @TODO: modify usage to avoid eval.
+    #       1. Create a singleton class `Sartoris` which contains all of the
+    #           git-deploy methods
+    #       2. qualify args with `Sartoris` via duck-typing (e.g. hasattr,
+    #           getattr, __callable__)
+    #
+    try:
+        eval(args[0] + '()')
+    except NameError:
+        logging.error(__name__ + '::No function called %(func)s.' % {
+            'func' : str(args[0])})
+
 
 if __name__ == "__main__": # pragma: nocover
     sys.exit(main(sys.argv))
