@@ -1,0 +1,20 @@
+Source: sartoris
+Section: net
+Priority: extra
+Maintainer: Ryan Lane <rlane@wikimedia.org>
+Build-Depends: debhelper (>= 7)
+Standards-Version: 3.9.3
+
+Package: sartoris-common
+Depends: python
+         bittornado
+Architecture: all
+Description: Shared libraries needed by all Sartoris packages
+
+Package: sartoris-seeder
+Depends: python-pyinotify
+         sartoris-common
+Architecture: all
+Description: Daemon which will track and seed repositories
+
+# TODO: Add package for sartoris-salt
