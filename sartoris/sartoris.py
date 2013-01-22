@@ -245,9 +245,9 @@ def main(argv, out=None, err=None):
     if opts.silent:
         level = logging.CRITICAL + 1
 
-    format = "%(message)s"
+    format = "%(asctime)s %(levelname)-8s %(message)s"
     handler = logging.StreamHandler(err)
-    handler.setFormatter(logging.Formatter(format))
+    handler.setFormatter(logging.Formatter(fmt=format, datefmt='%b-%d %H:%M:%S'))
     log.addHandler(handler)
     log.setLevel(level)
 
