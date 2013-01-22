@@ -84,7 +84,7 @@ def parseargs(argv):
         help="increase the logging verbosity")
 
     (opts, args) = parser.parse_args(args=argv[1:])
-    return (opts, args)
+    return opts, args
 
 class Sartoris(object):
 
