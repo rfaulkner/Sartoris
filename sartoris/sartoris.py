@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """`This`_ is a tool to manage using git as a deployment management tool
-.. _This: https://gerrit.wikimedia.org/r/gitweb?p=sartoris.git;a=blob;f=sartoris/sartoris.py
+
+.. _This: https://gerrit.wikimedia.org/r/gitweb?p=sartoris.git
 """
 __license__ = """\
 Copyright (c) 2012-2013 Wikimedia Foundation <info@wikimedia.org>
@@ -28,8 +29,8 @@ from dulwich.config import StackedConfig
 from datetime import datetime
 
 exit_codes = {
-    1 : 'Operation failed.  Exiting.',
-    2 : 'Lock file already exists.  Exiting.'
+    1: 'Operation failed.  Exiting.',
+    2: 'Lock file already exists.  Exiting.'
 }
 
 # Module level attribute for tagging datetime format
@@ -40,13 +41,15 @@ try:
     NullHandler = logging.NullHandler
 except AttributeError:
     class NullHandler(logging.Handler):
-        def emit(self, record): pass
+        def emit(self, record):
+            pass
 
 # Add a do-nothing NullHandler to the module logger to prevent "No handlers
 # could be found" errors. The calling code can still add other, more useful
 # handlers, or otherwise configure logging.
 log = logging.getLogger(__name__)
 log.addHandler(NullHandler())
+
 
 def parseargs(argv):
     """Parse command line arguments.
@@ -81,6 +84,7 @@ def parseargs(argv):
     (opts, args) = parser.parse_args(args=argv[1:])
     return opts, args
 
+
 class Sartoris(object):
 
     __instance = None                           # class instance
@@ -105,7 +109,6 @@ class Sartoris(object):
         # @TODO use dulwich package implement git functionality rather
         #       than shell commands - http://www.samba.org/~jelmer/dulwich/
 
-
         # Create lock file - check if it already exists
         # @TODO catch exceptions for any os callable attributes
         if 'lock' in os.listdir('.git/deploy'):
@@ -115,11 +118,11 @@ class Sartoris(object):
 
         lock_file_handle = '.git/deploy/lock'
         log.info(__name__ + '::Creating lock file.')
-        subprocess.call(['touch',lock_file_handle])
+        subprocess.call(['touch', lock_file_handle])
 
         # Add tags.  First retrieve the repository name then build the tag.
         try:
-            repo_name = subprocess.Popen(['git', 'remote','-v'],
+            repo_name = subprocess.Popen(['git', 'remote', '-v'],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE).stdout.readline().strip().split(
                 '/')[-1].split('.git')[0]
@@ -130,7 +133,7 @@ class Sartoris(object):
 
         log.info(__name__ + '::Adding `start` tag for repo.')
         _tag = '{0}-start-{1}'.format(repo_name, datetime.now().strftime(DATE_TIME_TAG_FORMAT))
-        subprocess.call(['git', 'tag', '-a', _tag,'-m', '"Tag for {0}"'.format(repo_name)])
+        subprocess.call(['git', 'tag', '-a', _tag, '-m', '"Tag for {0}"'.format(repo_name)])
 
     def abort(self):
         """
@@ -153,13 +156,13 @@ class Sartoris(object):
             return exit_code
         sc = StackedConfig(StackedConfig.default_backends())
         try:
-            hook_dir = sc.get('deploy','hook-dir')
+            hook_dir = sc.get('deploy', 'hook-dir')
         except KeyError:
             exit_code = 21
             log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
             return exit_code
         try:
-            repo_name = sc.get('deploy','tag-prefix')
+            repo_name = sc.get('deploy', 'tag-prefix')
         except KeyError:
             exit_code = 22
             log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
@@ -231,9 +234,9 @@ def main(argv, out=None, err=None):
     :param out: stream to write messages; :data:`sys.stdout` if None.
     :param err: stream to write error messages; :data:`sys.stderr` if None.
     """
-    if out is None: # pragma: nocover
+    if out is None:  # pragma: nocover
         out = sys.stdout
-    if err is None: # pragma: nocover
+    if err is None:  # pragma: nocover
         err = sys.stderr
     (opts, args) = parseargs(argv)
     level = logging.WARNING - ((opts.verbose - opts.quiet) * 10)
@@ -255,8 +258,7 @@ def main(argv, out=None, err=None):
         getattr(Sartoris(), attr)()
     else:
         log.error(__name__ + '::No function called %(func)s.' % {
-            'func' : attr})
+            'func': attr})
 
-if __name__ == "__main__": # pragma: nocover
+if __name__ == "__main__":  # pragma: nocover
     sys.exit(main(sys.argv))
-
