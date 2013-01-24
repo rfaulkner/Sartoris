@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """`This`_ is a tool to manage using git as a deployment management tool
 
-.. _This:   https://github.com/wikimedia/Sartoris/blob/master/sartoris.py
+.. _This: https://gerrit.wikimedia.org/r/gitweb?p=sartoris.git;a=blob;f=sartoris/sartoris.py
 
 All of this is accomplished using only modules from the Python standard library
 that are available in every installation.
