@@ -1,15 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """`This`_ is a tool to manage using git as a deployment management tool
-
 .. _This: https://gerrit.wikimedia.org/r/gitweb?p=sartoris.git;a=blob;f=sartoris/sartoris.py
-
-All of this is accomplished using only modules from the Python standard library
-that are available in every installation.
-
 """
 __license__ = """\
-Copyright (c) 2012 Ryan Faulkner <rfaulkner@wikimedia.org>
+Copyright (c) 2012-2013 Wikimedia Foundation <info@wikimedia.org>
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
