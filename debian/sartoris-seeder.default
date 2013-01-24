@@ -1,8 +1,0 @@
-# Defaults for sartoris-seeder initscript
-# sourced by /etc/init.d/sartoris-seeder
-# installed at /etc/default/sartoris-seeder by the maintainer scripts
-
-#
-# This is a POSIX shell fragment
-#
-CONFIGFILE="/etc/sartoris/sartoris-seeder.conf"
