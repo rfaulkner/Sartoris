@@ -33,6 +33,7 @@ exit_codes = {
     1: 'Operation failed.  Exiting.',
     2: 'Lock file already exists.  Exiting.',
     3: 'Please enter valid arguments.',
+    4: 'Missing lock file.',
     21: 'Missing system configuration item "hook-dir". Exiting.',
     22: 'Missing repo configuration item "tag-prefix". '
         'Please configure this using:'
@@ -42,8 +43,10 @@ exit_codes = {
     32: 'Failed to run sync script. Exiting.',
 }
 
-# Module level attribute for tagging datetime format
-DATE_TIME_TAG_FORMAT = '%Y%m%d-%H%M%S'
+class SartorisError(Exception):
+    """ Basic exception class for UserMetric types """
+    def __init__(self, message="Git deploy error."):
+        Exception.__init__(self, message)
 
 # NullHandler was added in Python 3.1.
 try:
@@ -101,12 +104,22 @@ def parseargs(argv):
 
 class Sartoris(object):
 
+    # Module level attribute for tagging datetime format
+    DATE_TIME_TAG_FORMAT = '%Y%m%d-%H%M%S'
+
+    # Name of deployment directory
+    DEPLOY_DIR = '.git/deploy/'
+
+    # Name of lock file
+    LOCK_FILE_HANDLE = 'lock'
+
     __instance = None                           # class instance
 
     def __init__(self, *args, **kwargs):
         """ Initialize class instance """
         self.__class__.__instance = self
         self._configure()
+        self._tag = None                    # Stores tag state
 
     def __new__(cls, *args, **kwargs):
         """ This class is Singleton, return only one instance """
@@ -132,6 +145,14 @@ class Sartoris(object):
             sys.exit(exit_code)
         self.config['sync_dir'] = '{0}/sync'.format(hook_dir)
 
+    def _check_lock(self):
+        """ Returns boolean flag on lock file existence """
+        return os.path.exists(self.DEPLOY_DIR + self.LOCK_FILE_HANDLE)
+
+    def _create_lock(self):
+        """ Create a lock file """
+        with open(self.DEPLOY_DIR + self.LOCK_FILE_HANDLE,'rb'): pass
+
     def start(self):
         """
             * write a lock file
@@ -147,12 +168,13 @@ class Sartoris(object):
             log.error(__name__ + '::' + exit_codes[exit_code])
             return exit_code
 
-        lock_file_handle = '.git/deploy/lock'
         log.info(__name__ + '::Creating lock file.')
-        subprocess.call(['touch', lock_file_handle])
+       self._create_lock()
+
         repo_name = self.config['repo_name']
         log.info(__name__ + '::Adding `start` tag for repo.')
-        timestamp = datetime.now().strftime(DATE_TIME_TAG_FORMAT)
+
+        timestamp = datetime.now().strftime(self.DATE_TIME_TAG_FORMAT)
         _tag = '{0}-start-{1}'.format(repo_name, timestamp)
         subprocess.call(['git', 'tag', '-a', _tag, '-m',
                          '"Tag for {0}"'.format(repo_name)])
@@ -163,7 +185,34 @@ class Sartoris(object):
             * reset state back to start tag
             * remove lock file
         """
-        raise NotImplementedError()
+
+        # Reset state - e.g. `git rev-list $TAG | head -n 1`
+        # @TODO replace with dulwich
+        commit_sha = subprocess.Popen(['git',
+                                       'rev-list',
+                                       self._tag,
+                                       '|',
+                                       '-n',
+                                       '1'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE).stdout.readline().strip()
+
+        # 1. hard reset the index to the desired tree
+        # 2. move the branch pointer back to the previous HEAD
+        # 3. commit revert
+        # @TODO replace with dulwich
+        subprocess.call(['git', 'reset', '--hard', commit_sha])
+        subprocess.call(['git', 'reset', '--soft', 'HEAD@{1}'])
+        subprocess.call(['git', 'commit', '-m',
+                         'Revert to {0}'.format(commit_sha)])
+
+        # Remove lock file
+        if os.listdir(self.DEPLOY_DIR).__contains__(self.LOCK_FILE_HANDLE):
+            os.remove(self.LOCK_FILE_HANDLE)
+        else:
+            log.error('abort::Lock file does not exist.')
+            return 4
+        return 0
 
     def sync(self, no_deps=False, force=False):
         """
@@ -274,7 +323,6 @@ def main(argv, out=None, err=None):
     else:
         log.error(__name__ + '::No function called %(method)s.' % {
             'method': args.method})
-
 
 if __name__ == "__main__":  # pragma: nocover
     sys.exit(main(sys.argv))
