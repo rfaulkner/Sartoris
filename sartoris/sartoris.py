@@ -163,7 +163,7 @@ class Sartoris(object):
         """ Create a lock file """
         with open(self.DEPLOY_DIR + self.LOCK_FILE_HANDLE,'rb'): pass
 
-    def start(self):
+    def start(self, args):
         """
             * write a lock file
             * add a start tag
@@ -191,7 +191,7 @@ class Sartoris(object):
                          '"Tag for {0}"'.format(repo_name)])
         return 0
 
-    def abort(self):
+    def abort(self, args):
         """
             * reset state back to start tag
             * remove lock file
@@ -225,7 +225,7 @@ class Sartoris(object):
             return 4
         return 0
 
-    def sync(self, no_deps=False, force=False):
+    def sync(self, args, no_deps=False, force=False):
         """
             * add a sync tag
             * write a .deploy file with the tag information
@@ -273,7 +273,7 @@ class Sartoris(object):
         os.unlink('.git/deploy')
         return 0
 
-    def resync(self):
+    def resync(self, args):
         """
             * write a lock file
             * call sync hook with the prefix (repo) and tag info
@@ -295,7 +295,7 @@ class Sartoris(object):
             return exit_code
         return self._sync(repo_name, deploy_info["tag"], self.config(force))
 
-    def revert(self):
+    def revert(self, args):
         """
             * write a lock file
             * write previous deploy info into .deploy
@@ -304,19 +304,19 @@ class Sartoris(object):
         """
         raise NotImplementedError()
 
-    def show_tag(self):
+    def show_tag(self, args):
         """
             * display current tagged release
         """
         raise NotImplementedError()
 
-    def log_deploys(self):
+    def log_deploys(self, args):
         """
             * show last x deploys
         """
         raise NotImplementedError()
 
-    def diff(self):
+    def diff(self, args):
         """
             * show a git diff of the last deploy and it's previous deploy
         """
@@ -358,7 +358,7 @@ def main(argv, out=None, err=None):
 
     if hasattr(Sartoris(), args.method) and callable(getattr(Sartoris(),
                                                      args.method)):
-        getattr(Sartoris(), args.method)()
+        getattr(Sartoris(), args.method)(args)
     else:
         log.error(__name__ + '::No function called %(method)s.' % {
             'method': args.method})
