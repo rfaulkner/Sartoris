@@ -28,10 +28,18 @@ import subprocess
 from dulwich.config import StackedConfig
 from datetime import datetime
 
+
 exit_codes = {
     1: 'Operation failed.  Exiting.',
     2: 'Lock file already exists.  Exiting.',
     3: 'Please enter valid arguments.'
+    21: 'Missing system configuration item "hook-dir". Exiting.',
+    22: 'Missing repo configuration item "tag-prefix". ' \
+        'Please configure this using:' \
+        '\n\tgit config tag-prefix <repo>',
+    30: 'No deploy started. Please run: git deploy start',
+    31: 'Failed to write tag on sync. Exiting.',
+    32: 'Failed to run sync script. Exiting.',
 }
 
 # Module level attribute for tagging datetime format
@@ -93,19 +101,41 @@ def parseargs(argv):
 
 class Sartoris(object):
 
+
     __instance = None                           # class instance
+
 
     def __init__(self, *args, **kwargs):
         """ Initialize class instance """
         self.__class__.__instance = self
+        self._configure()
 
-        # @TODO add dulwich config
 
     def __new__(cls, *args, **kwargs):
         """ This class is Singleton, return only one instance """
         if not cls.__instance:
             cls.__instance = super(Sartoris, cls).__new__(cls, *args, **kwargs)
         return cls.__instance
+
+
+    def _configure(self):
+        """ Parse configuration from git config """
+        sc = StackedConfig(StackedConfig.default_backends())
+        self.config = {}
+        try:
+            self.config['hook_dir'] = sc.get('deploy', 'hook-dir')
+        except KeyError:
+            exit_code = 21
+            log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
+            sys.exit(exit_code)
+        try:
+            self.config['repo_name'] = sc.get('deploy', 'tag-prefix')
+        except KeyError:
+            exit_code = 22
+            log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
+            sys.exit(exit_code)
+        self.config['sync_dir'] = '{0}/sync'.format(hook_dir)
+
 
     def start(self):
         """
@@ -142,6 +172,8 @@ class Sartoris(object):
             datetime.now().strftime(DATE_TIME_TAG_FORMAT))
         subprocess.call(['git', 'tag', '-a', _tag, '-m',
                          '"Tag for {0}"'.format(repo_name)])
+        return 0
+
 
     def abort(self):
         """
@@ -150,6 +182,7 @@ class Sartoris(object):
         """
         raise NotImplementedError()
 
+
     def sync(self, no_deps=False, force=False):
         """
             * add a sync tag
@@ -157,34 +190,19 @@ class Sartoris(object):
             * call a sync hook with the prefix (repo) and tag info
         """
         #TODO: do git calls in dulwich, rather than shelling out
-        #TODO: get all configuration via a function, and get it during main
         if 'lock' not in os.listdir('.git/deploy'):
-            exit_code = 20
+            exit_code = 30
             log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
             return exit_code
-        sc = StackedConfig(StackedConfig.default_backends())
-        try:
-            hook_dir = sc.get('deploy', 'hook-dir')
-        except KeyError:
-            exit_code = 21
-            log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
-            return exit_code
-        try:
-            repo_name = sc.get('deploy', 'tag-prefix')
-        except KeyError:
-            exit_code = 22
-            log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
-            return exit_code
-        sync_dir = '{0}/sync'.format(hook_dir)
-        sync_script = '{0}/{1}.sync'.format(sync_dir, repo_name)
         _tag = "{0}-sync-{1}".format(repo_name,
                                      datetime.now().strftime(
                                          DATE_TIME_TAG_FORMAT))
         proc = subprocess.Popen(['/usr/bin/git tag', '-a', _tag])
         if proc.returncode != 0:
-            exit_code = 23
+            exit_code = 31
             log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
             return exit_code
+        sync_script = '{0}/{1}.sync'.format(self.config["sync_dir"], repo_name)
         #TODO: use a pluggable sync system rather than shelling out
         if os.path.exists(sync_script):
             proc = subprocess.Popen([sync_script,
@@ -193,9 +211,12 @@ class Sartoris(object):
                                      '--force="{0}"'.format(force)])
             log.info(proc.stdout.read())
             if proc.returncode != 0:
-                exit_code = 24
+                exit_code = 32
                 log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
                 return exit_code
+        os.unlink('.git/deploy')
+        return 0
+
 
     def resync(self):
         """
@@ -204,6 +225,7 @@ class Sartoris(object):
             * remove lock file
         """
         raise NotImplementedError()
+
 
     def revert(self):
         """
@@ -214,17 +236,20 @@ class Sartoris(object):
         """
         raise NotImplementedError()
 
+
     def show_tag(self):
         """
             * display current tagged release
         """
         raise NotImplementedError()
 
+
     def log_deploys(self):
         """
             * show last x deploys
         """
         raise NotImplementedError()
+
 
     def diff(self):
         """
@@ -272,6 +297,7 @@ def main(argv, out=None, err=None):
     else:
         log.error(__name__ + '::No function called %(method)s.' % {
             'method': args.method})
+
 
 if __name__ == "__main__":  # pragma: nocover
     sys.exit(main(sys.argv))
