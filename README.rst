@@ -1,12 +1,15 @@
 Sartoris
 ========
 
-Tool to manage using git as a deployment management tool
+This is the Sartoris project.
+It is a tool to manage using git as a deployment management tool
 
 **Sartoris**
 
-Sartoris is a novel, first published in 1929, by the American author William Faulkner.
+The project is named after a novel authored by William Faulkner entitled Sartoris, first published in 1929.
 It portrays the decay of the Mississippi aristocracy following the social upheaval of the American Civil War.
+
+This name was chosen because Ryan Faulkner is working on the project and we thought it would be funny.
 
 - Published: 1929
 - Author: William Faulkner
