@@ -34,8 +34,8 @@ exit_codes = {
     2: 'Lock file already exists.  Exiting.',
     3: 'Please enter valid arguments.',
     21: 'Missing system configuration item "hook-dir". Exiting.',
-    22: 'Missing repo configuration item "tag-prefix". ' \
-        'Please configure this using:' \
+    22: 'Missing repo configuration item "tag-prefix". '
+        'Please configure this using:'
         '\n\tgit config tag-prefix <repo>',
     30: 'No deploy started. Please run: git deploy start',
     31: 'Failed to write tag on sync. Exiting.',
@@ -86,14 +86,14 @@ def parseargs(argv):
     # Global options.
     parser.add_argument("method")
     parser.add_argument("-q", "--quiet",
-        default=defaults["quiet"], action="count",
-        help="decrease the logging verbosity")
+                        default=defaults["quiet"], action="count",
+                        help="decrease the logging verbosity")
     parser.add_argument("-s", "--silent",
-        default=defaults["silent"], action="store_true",
-        help="silence the logger")
+                        default=defaults["silent"], action="store_true",
+                        help="silence the logger")
     parser.add_argument("-v", "--verbose",
-        default=defaults["verbose"], action="count",
-        help="increase the logging verbosity")
+                        default=defaults["verbose"], action="count",
+                        help="increase the logging verbosity")
 
     args = parser.parse_args()
     return args
@@ -150,21 +150,10 @@ class Sartoris(object):
         lock_file_handle = '.git/deploy/lock'
         log.info(__name__ + '::Creating lock file.')
         subprocess.call(['touch', lock_file_handle])
-
-        # Add tags.  First retrieve the repository name then build the tag.
-        try:
-            repo_name = subprocess.Popen(['git', 'remote', '-v'],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE).stdout.readline().strip().split(
-                '/')[-1].split('.git')[0]
-        except KeyError:
-            exit_code = 2
-            log.error(__name__ + '::' + exit_codes[exit_code])
-            return exit_code
-
+        repo_name = self.config['repo_name']
         log.info(__name__ + '::Adding `start` tag for repo.')
-        _tag = '{0}-start-{1}'.format(repo_name,
-            datetime.now().strftime(DATE_TIME_TAG_FORMAT))
+        timestamp = datetime.now().strftime(DATE_TIME_TAG_FORMAT)
+        _tag = '{0}-start-{1}'.format(repo_name, timestamp)
         subprocess.call(['git', 'tag', '-a', _tag, '-m',
                          '"Tag for {0}"'.format(repo_name)])
         return 0
@@ -267,7 +256,7 @@ def main(argv, out=None, err=None):
     format = "%(asctime)s %(levelname)-8s %(message)s"
     handler = logging.StreamHandler(err)
     handler.setFormatter(logging.Formatter(fmt=format,
-        datefmt='%b-%d %H:%M:%S'))
+                         datefmt='%b-%d %H:%M:%S'))
     log.addHandler(handler)
     log.setLevel(level)
 
@@ -280,7 +269,7 @@ def main(argv, out=None, err=None):
         return 3
 
     if hasattr(Sartoris(), args.method) and callable(getattr(Sartoris(),
-        args.method)):
+                                                     args.method)):
         getattr(Sartoris(), args.method)()
     else:
         log.error(__name__ + '::No function called %(method)s.' % {
