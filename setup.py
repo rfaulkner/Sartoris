@@ -1,22 +1,22 @@
-#!python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 import sys
 from setuptools import setup
 
 
 meta = dict(
-    name             = 'sartoris',
-    version          = __version__,
-    description      = 'Tool to manage using git as a deployment management tool',
-    long_description = 'Tool to manage using git as a deployment management tool',
-    url              = 'https://github.com/wikimedia/sartoris',
-    
-    py_modules       = [ 'sartoris', ],
-    entry_points     = { 'console_scripts':['sartoris = sartoris:main'] },
-    install_requires = [ 'dulwich', ],
-    
-    keywords         = ['git', 'deploy', 'scripts', 'cli'],
-    classifiers      = [
+    name='sartoris',
+    version=__version__,
+    description='Tool to manage using git as a deployment management tool',
+    long_description='Tool to manage using git as a deployment /
+    management tool',
+    url='https://github.com/wikimedia/sartoris',
+    py_modules=['sartoris'],
+    entry_points={'console_scripts': ['sartoris = sartoris:main']},
+    install_requires=['dulwich'],
+    keywords=['git', 'deploy', 'scripts', 'cli'],
+    classifiers=[
         "Development Status :: 3 - Alpha",
         "Environment :: Console",
         "Intended Audience :: Developers",
@@ -28,8 +28,8 @@ meta = dict(
         "License :: OSI Approved :: BSD License",
         "License :: OSI Approved :: MIT License",
     ],
-    zip_safe = False,
-    license  = "MIT",
+    zip_safe=False,
+    license="License :: OSI Approved :: BSD License",
 )
 
 # Automatic conversion for Python 3 requires distribute.
