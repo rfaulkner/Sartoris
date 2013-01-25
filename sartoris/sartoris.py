@@ -101,22 +101,18 @@ def parseargs(argv):
 
 class Sartoris(object):
 
-
     __instance = None                           # class instance
-
 
     def __init__(self, *args, **kwargs):
         """ Initialize class instance """
         self.__class__.__instance = self
         self._configure()
 
-
     def __new__(cls, *args, **kwargs):
         """ This class is Singleton, return only one instance """
         if not cls.__instance:
             cls.__instance = super(Sartoris, cls).__new__(cls, *args, **kwargs)
         return cls.__instance
-
 
     def _configure(self):
         """ Parse configuration from git config """
@@ -135,7 +131,6 @@ class Sartoris(object):
             log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
             sys.exit(exit_code)
         self.config['sync_dir'] = '{0}/sync'.format(hook_dir)
-
 
     def start(self):
         """
@@ -174,14 +169,12 @@ class Sartoris(object):
                          '"Tag for {0}"'.format(repo_name)])
         return 0
 
-
     def abort(self):
         """
             * reset state back to start tag
             * remove lock file
         """
         raise NotImplementedError()
-
 
     def sync(self, no_deps=False, force=False):
         """
@@ -217,7 +210,6 @@ class Sartoris(object):
         os.unlink('.git/deploy')
         return 0
 
-
     def resync(self):
         """
             * write a lock file
@@ -225,7 +217,6 @@ class Sartoris(object):
             * remove lock file
         """
         raise NotImplementedError()
-
 
     def revert(self):
         """
@@ -236,20 +227,17 @@ class Sartoris(object):
         """
         raise NotImplementedError()
 
-
     def show_tag(self):
         """
             * display current tagged release
         """
         raise NotImplementedError()
 
-
     def log_deploys(self):
         """
             * show last x deploys
         """
         raise NotImplementedError()
-
 
     def diff(self):
         """
