@@ -4,13 +4,16 @@
 import sys
 from setuptools import setup
 
+__version__ = '0.9-dev'
 
 meta = dict(
     name='sartoris',
     version=__version__,
     description='Tool to manage using git as a deployment management tool',
-    long_description='Tool to manage using git as a deployment /
+    long_description='Tool to manage using git as a deployment \
     management tool',
+    author="Wikimedia Foundation",
+    author_email="info@wikimedia.org",
     url='https://github.com/wikimedia/sartoris',
     py_modules=['sartoris'],
     entry_points={'console_scripts': ['sartoris = sartoris:main']},
