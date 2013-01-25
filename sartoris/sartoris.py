@@ -29,9 +29,9 @@ from dulwich.config import StackedConfig
 from datetime import datetime
 
 exit_codes = {
-    1 : 'Operation failed.  Exiting.',
-    2 : 'Lock file already exists.  Exiting.',
-    3 : 'Please enter valid arguments.'
+    1: 'Operation failed.  Exiting.',
+    2: 'Lock file already exists.  Exiting.',
+    3: 'Please enter valid arguments.'
 }
 
 # Module level attribute for tagging datetime format
@@ -64,7 +64,7 @@ def parseargs(argv):
         description="This script performs ",
         epilog="",
         conflict_handler="resolve",
-        usage = "sartoris [-q --quiet] [-s --silent] [-v --verbose] [method]"
+        usage="sartoris [-q --quiet] [-s --silent] [-v --verbose] [method]"
     )
 
     parser.allow_interspersed_args = False
@@ -140,7 +140,7 @@ class Sartoris(object):
         log.info(__name__ + '::Adding `start` tag for repo.')
         _tag = '{0}-start-{1}'.format(repo_name,
             datetime.now().strftime(DATE_TIME_TAG_FORMAT))
-        subprocess.call(['git', 'tag', '-a', _tag,'-m',
+        subprocess.call(['git', 'tag', '-a', _tag, '-m',
                          '"Tag for {0}"'.format(repo_name)])
 
     def abort(self):
@@ -271,7 +271,7 @@ def main(argv, out=None, err=None):
         getattr(Sartoris(), args.method)()
     else:
         log.error(__name__ + '::No function called %(method)s.' % {
-            'method' : args.method})
+            'method': args.method})
 
 if __name__ == "__main__":  # pragma: nocover
     sys.exit(main(sys.argv))
