@@ -173,7 +173,7 @@ class Sartoris(object):
 
         # Create lock file - check if it already exists
         # @TODO catch exceptions for any os callable attributes
-        if 'lock' in os.listdir('.git/deploy'):
+        if self._check_lock():
             exit_code = 2
             log.error(__name__ + '::' + exit_codes[exit_code])
             return exit_code
@@ -181,6 +181,7 @@ class Sartoris(object):
         log.info(__name__ + '::Creating lock file.')
         self._create_lock()
 
+        # Tag the repo at this point
         repo_name = self.config['repo_name']
         log.info(__name__ + '::Adding `start` tag for repo.')
 
