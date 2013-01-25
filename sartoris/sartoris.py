@@ -179,7 +179,7 @@ class Sartoris(object):
             return exit_code
 
         log.info(__name__ + '::Creating lock file.')
-       self._create_lock()
+        self._create_lock()
 
         repo_name = self.config['repo_name']
         log.info(__name__ + '::Adding `start` tag for repo.')
