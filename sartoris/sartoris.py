@@ -32,7 +32,7 @@ from datetime import datetime
 exit_codes = {
     1: 'Operation failed.  Exiting.',
     2: 'Lock file already exists.  Exiting.',
-    3: 'Please enter valid arguments.'
+    3: 'Please enter valid arguments.',
     21: 'Missing system configuration item "hook-dir". Exiting.',
     22: 'Missing repo configuration item "tag-prefix". ' \
         'Please configure this using:' \
