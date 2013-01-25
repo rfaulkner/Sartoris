@@ -21,7 +21,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.\
 """
 
 import logging
-import optparse
+import argparse
 import os
 import sys
 import subprocess
@@ -29,8 +29,9 @@ from dulwich.config import StackedConfig
 from datetime import datetime
 
 exit_codes = {
-    1: 'Operation failed.  Exiting.',
-    2: 'Lock file already exists.  Exiting.'
+    1 : 'Operation failed.  Exiting.',
+    2 : 'Lock file already exists.  Exiting.',
+    3 : 'Please enter valid arguments.'
 }
 
 # Module level attribute for tagging datetime format
@@ -54,14 +55,18 @@ log.addHandler(NullHandler())
 def parseargs(argv):
     """Parse command line arguments.
 
-    Returns a tuple (*opts*, *args*), where *opts* is an
-    :class:`optparse.Values` instance and *args* is the list of arguments left
-    over after processing.
+    Returns *args*, the list of arguments left over after processing.
 
     :param argv: a list of command line arguments, usually :data:`sys.argv`.
     """
-    prog = argv[0]
-    parser = optparse.OptionParser(prog=prog)
+
+    parser = argparse.ArgumentParser(
+        description="This script performs ",
+        epilog="",
+        conflict_handler="resolve",
+        usage = "sartoris [-q --quiet] [-s --silent] [-v --verbose] [method]"
+    )
+
     parser.allow_interspersed_args = False
 
     defaults = {
@@ -71,18 +76,19 @@ def parseargs(argv):
     }
 
     # Global options.
-    parser.add_option("-q", "--quiet", dest="quiet",
+    parser.add_argument("method")
+    parser.add_argument("-q", "--quiet",
         default=defaults["quiet"], action="count",
         help="decrease the logging verbosity")
-    parser.add_option("-s", "--silent", dest="silent",
+    parser.add_argument("-s", "--silent",
         default=defaults["silent"], action="store_true",
         help="silence the logger")
-    parser.add_option("-v", "--verbose", dest="verbose",
+    parser.add_argument("-v", "--verbose",
         default=defaults["verbose"], action="count",
         help="increase the logging verbosity")
 
-    (opts, args) = parser.parse_args(args=argv[1:])
-    return opts, args
+    args = parser.parse_args()
+    return args
 
 
 class Sartoris(object):
@@ -132,8 +138,10 @@ class Sartoris(object):
             return exit_code
 
         log.info(__name__ + '::Adding `start` tag for repo.')
-        _tag = '{0}-start-{1}'.format(repo_name, datetime.now().strftime(DATE_TIME_TAG_FORMAT))
-        subprocess.call(['git', 'tag', '-a', _tag, '-m', '"Tag for {0}"'.format(repo_name)])
+        _tag = '{0}-start-{1}'.format(repo_name,
+            datetime.now().strftime(DATE_TIME_TAG_FORMAT))
+        subprocess.call(['git', 'tag', '-a', _tag,'-m',
+                         '"Tag for {0}"'.format(repo_name)])
 
     def abort(self):
         """
@@ -238,14 +246,15 @@ def main(argv, out=None, err=None):
         out = sys.stdout
     if err is None:  # pragma: nocover
         err = sys.stderr
-    (opts, args) = parseargs(argv)
-    level = logging.WARNING - ((opts.verbose - opts.quiet) * 10)
-    if opts.silent:
+    args = parseargs(argv)
+    level = logging.WARNING - ((args.verbose - args.quiet) * 10)
+    if args.silent:
         level = logging.CRITICAL + 1
 
     format = "%(asctime)s %(levelname)-8s %(message)s"
     handler = logging.StreamHandler(err)
-    handler.setFormatter(logging.Formatter(fmt=format, datefmt='%b-%d %H:%M:%S'))
+    handler.setFormatter(logging.Formatter(fmt=format,
+        datefmt='%b-%d %H:%M:%S'))
     log.addHandler(handler)
     log.setLevel(level)
 
@@ -253,12 +262,16 @@ def main(argv, out=None, err=None):
 
     # Inline call to functionality - if Sartoris does not possess this
     #  attribute flag with logger
-    attr = str(args[0])
-    if hasattr(Sartoris(), attr) and callable(getattr(Sartoris(), attr)):
-        getattr(Sartoris(), attr)()
+    if not args.method:
+        print args.help
+        return 3
+
+    if hasattr(Sartoris(), args.method) and callable(getattr(Sartoris(),
+        args.method)):
+        getattr(Sartoris(), args.method)()
     else:
-        log.error(__name__ + '::No function called %(func)s.' % {
-            'func': attr})
+        log.error(__name__ + '::No function called %(method)s.' % {
+            'method' : args.method})
 
 if __name__ == "__main__":  # pragma: nocover
     sys.exit(main(sys.argv))
