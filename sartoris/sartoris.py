@@ -31,16 +31,19 @@ from datetime import datetime
 
 exit_codes = {
     1: 'Operation failed.  Exiting.',
-    2: 'Lock file already exists.  Exiting.',
+    2: 'A deployment has already been started.  Exiting.',
     3: 'Please enter valid arguments.',
     4: 'Missing lock file.',
+    20: 'Cannot find top level directory for the git repository. Exiting.',
     21: 'Missing system configuration item "hook-dir". Exiting.',
     22: 'Missing repo configuration item "tag-prefix". '
         'Please configure this using:'
         '\n\tgit config tag-prefix <repo>',
     30: 'No deploy started. Please run: git deploy start',
     31: 'Failed to write tag on sync. Exiting.',
-    32: 'Failed to run sync script. Exiting.',
+    32: 'Failed to write the .deploy file. Exiting.',
+    40: 'Failed to run sync script. Exiting.',
+    50: 'Failed to read the .deploy file. Exiting.',
 }
 
 class SartorisError(Exception):
@@ -131,6 +134,13 @@ class Sartoris(object):
         """ Parse configuration from git config """
         sc = StackedConfig(StackedConfig.default_backends())
         self.config = {}
+        proc = subprocess.Popen(['git', 'rev-parse', '--show-toplevel'])
+        if proc.returncode != 0:
+            exit_code = 20
+            log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
+            sys.exit(exit_code)
+        self.config['top_dir'] = proc.stdout.read()
+        self.config['deploy_file'] = self.config['top_dir'] + '/.git'
         try:
             self.config['hook_dir'] = sc.get('deploy', 'hook-dir')
         except KeyError:
@@ -225,6 +235,7 @@ class Sartoris(object):
             exit_code = 30
             log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
             return exit_code
+        repo_name = self.config['repo_name']
         _tag = "{0}-sync-{1}".format(repo_name,
                                      datetime.now().strftime(
                                          DATE_TIME_TAG_FORMAT))
@@ -233,6 +244,19 @@ class Sartoris(object):
             exit_code = 31
             log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
             return exit_code
+        # Write .deploy file
+        try:
+            deploy_file = open(self.config['deploy_file'], 'w')
+            deploy_file.write(json.dumps({'repo': repo_name, 'tag': _tag}))
+            deploy_file.close()
+        except OSError:
+            exit_code = 32
+            log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
+            return exit_code
+        return self._sync()
+
+    def _sync(self, tag, force):
+        repo_name = self.config['repo_name']
         sync_script = '{0}/{1}.sync'.format(self.config["sync_dir"], repo_name)
         #TODO: use a pluggable sync system rather than shelling out
         if os.path.exists(sync_script):
@@ -242,7 +266,7 @@ class Sartoris(object):
                                      '--force="{0}"'.format(force)])
             log.info(proc.stdout.read())
             if proc.returncode != 0:
-                exit_code = 32
+                exit_code = 40
                 log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
                 return exit_code
         os.unlink('.git/deploy')
@@ -254,7 +278,21 @@ class Sartoris(object):
             * call sync hook with the prefix (repo) and tag info
             * remove lock file
         """
-        raise NotImplementedError()
+        if self._check_lock():
+            exit_code = 2
+            log.error(__name__ + '::' + exit_codes[exit_code])
+            return exit_code
+        self._create_lock()
+        repo_name = self.config['repo_name']
+        try:
+            deploy_file = open(self.config['deploy_file'], 'r')
+            deploy_info = deploy_file.read()
+            deploy_info = json.loads(deploy_info)
+        except OSError:
+            exit_code = 50
+            log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
+            return exit_code
+        return self._sync(repo_name, deploy_info["tag"], self.config(force))
 
     def revert(self):
         """
