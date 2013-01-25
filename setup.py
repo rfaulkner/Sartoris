@@ -1,27 +1,35 @@
+#!python
+# -*- coding: utf-8 -*-
 import sys
-
 from setuptools import setup
 
+
 meta = dict(
-    name="sartoris",
-    version="0.0.1",
-    description="Tool to manage using git as a deployment management tool",
-    author="Wikimedia Foundation",
-    author_email="info@wikimedia.org",
-    py_modules=["script"],
-    test_suite="tests",
-    install_requires=["setuptools"],
-    keywords="scripts",
-    url="http://packages.python.org/sartoris",
-    classifiers=[
+    name             = 'sartoris',
+    version          = __version__,
+    description      = 'Tool to manage using git as a deployment management tool',
+    long_description = 'Tool to manage using git as a deployment management tool',
+    url              = 'https://github.com/wikimedia/sartoris',
+    
+    py_modules       = [ 'sartoris', ],
+    entry_points     = { 'console_scripts':['sartoris = sartoris:main'] },
+    install_requires = [ 'dulwich', ],
+    
+    keywords         = ['git', 'deploy', 'scripts', 'cli'],
+    classifiers      = [
         "Development Status :: 3 - Alpha",
+        "Environment :: Console",
         "Intended Audience :: Developers",
+        "Topic :: Utilities"
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2.7",
+        "Operating System :: OS Independent",
         "License :: OSI Approved :: BSD License",
         "License :: OSI Approved :: MIT License",
-        "Natural Language :: English",
-        "Programming Language :: Python",
-        "Topic :: Software Development :: Testing",
     ],
+    zip_safe = False,
+    license  = "MIT",
 )
 
 # Automatic conversion for Python 3 requires distribute.
