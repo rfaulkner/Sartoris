@@ -34,6 +34,7 @@ exit_codes = {
     2: 'A deployment has already been started.  Exiting.',
     3: 'Please enter valid arguments.',
     4: 'Missing lock file.',
+    5: 'Could not reset.',
     20: 'Cannot find top level directory for the git repository. Exiting.',
     21: 'Missing system configuration item "hook-dir". Exiting.',
     22: 'Missing repo configuration item "tag-prefix". '
@@ -174,16 +175,14 @@ class Sartoris(object):
         # Create lock file - check if it already exists
         # @TODO catch exceptions for any os callable attributes
         if self._check_lock():
-            exit_code = 2
-            log.error(__name__ + '::' + exit_codes[exit_code])
-            return exit_code
+            raise SartorisError(message=exit_codes[2])
 
-        log.info(__name__ + '::Creating lock file.')
+        log.debug(__name__ + '::Creating lock file.')
         self._create_lock()
 
         # Tag the repo at this point
         repo_name = self.config['repo_name']
-        log.info(__name__ + '::Adding `start` tag for repo.')
+        log.debug(__name__ + '::Adding `start` tag for repo.')
 
         timestamp = datetime.now().strftime(self.DATE_TIME_TAG_FORMAT)
         _tag = '{0}-start-{1}'.format(repo_name, timestamp)
@@ -212,17 +211,19 @@ class Sartoris(object):
         # 2. move the branch pointer back to the previous HEAD
         # 3. commit revert
         # @TODO replace with dulwich
-        subprocess.call(['git', 'reset', '--hard', commit_sha])
-        subprocess.call(['git', 'reset', '--soft', 'HEAD@{1}'])
-        subprocess.call(['git', 'commit', '-m',
-                         'Revert to {0}'.format(commit_sha)])
+        if not subprocess.call(['git', 'reset', '--hard', commit_sha]):
+            raise SartorisError(message=exit_codes[5])
+        if not subprocess.call(['git', 'reset', '--soft', 'HEAD@{1}']):
+            raise SartorisError(message=exit_codes[5])
+        if not subprocess.call(['git', 'commit', '-m',
+                         'Revert to {0}'.format(commit_sha)]):
+            raise SartorisError(message=exit_codes[5])
 
         # Remove lock file
         if os.listdir(self.DEPLOY_DIR).__contains__(self.LOCK_FILE_HANDLE):
             os.remove(self.LOCK_FILE_HANDLE)
         else:
-            log.error('abort::Lock file does not exist.')
-            return 4
+            raise SartorisError(message=exit_codes[4])
         return 0
 
     def sync(self, args, no_deps=False, force=False):
@@ -358,7 +359,10 @@ def main(argv, out=None, err=None):
 
     if hasattr(Sartoris(), args.method) and callable(getattr(Sartoris(),
                                                      args.method)):
-        getattr(Sartoris(), args.method)(args)
+        try:
+            getattr(Sartoris(), args.method)(args)
+        except SartorisError as e:
+            log.error(e.message)
     else:
         log.error(__name__ + '::No function called %(method)s.' % {
             'method': args.method})
