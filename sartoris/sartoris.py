@@ -49,8 +49,12 @@ exit_codes = {
 
 class SartorisError(Exception):
     """ Basic exception class for UserMetric types """
-    def __init__(self, message="Git deploy error."):
+    def __init__(self, message="Git deploy error.",exit_code=1):
         Exception.__init__(self, message)
+        self._exit_code = int(exit_code)
+
+    @property
+    def exit_code(self): return self._exit_code
 
 # NullHandler was added in Python 3.1.
 try:
@@ -324,6 +328,7 @@ class Sartoris(object):
         raise NotImplementedError()
 
 
+
 def main(argv, out=None, err=None):
     """Main entry point.
 
@@ -363,6 +368,7 @@ def main(argv, out=None, err=None):
             getattr(Sartoris(), args.method)(args)
         except SartorisError as e:
             log.error(e.message)
+            return e.exit_code
     else:
         log.error(__name__ + '::No function called %(method)s.' % {
             'method': args.method})
