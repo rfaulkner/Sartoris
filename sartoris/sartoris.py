@@ -202,26 +202,26 @@ class Sartoris(object):
 
         # Reset state - e.g. `git rev-list $TAG | head -n 1`
         # @TODO replace with dulwich
-        commit_sha = subprocess.Popen(['git',
-                                       'rev-list',
-                                       self._tag,
-                                       '|',
-                                       '-n',
-                                       '1'],
+        cmd = "git rev-list {0} | head -n 1".format(self._tag)
+        proc = subprocess.Popen(cmd.split(),
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE).stdout.readline().strip()
+            stderr=subprocess.PIPE)
+        if not proc.returncode:
+            commit_sha = proc.stdout.readline().strip()
+        else:
+            raise SartorisError(message=exit_codes[5], exit_code=5)
 
         # 1. hard reset the index to the desired tree
         # 2. move the branch pointer back to the previous HEAD
         # 3. commit revert
         # @TODO replace with dulwich
-        if not subprocess.call(['git', 'reset', '--hard', commit_sha]):
-            raise SartorisError(message=exit_codes[5])
-        if not subprocess.call(['git', 'reset', '--soft', 'HEAD@{1}']):
-            raise SartorisError(message=exit_codes[5])
-        if not subprocess.call(['git', 'commit', '-m',
-                         'Revert to {0}'.format(commit_sha)]):
-            raise SartorisError(message=exit_codes[5])
+        if subprocess.call("git reset --hard {0}".format(commit_sha).split()):
+            raise SartorisError(message=exit_codes[5], exit_code=5)
+        if subprocess.call("git reset --soft HEAD@{1}".split()):
+            raise SartorisError(message=exit_codes[5], exit_code=5)
+        if subprocess.call("git commit -m 'Revert to {0}'".format(commit_sha).
+            split()):
+            raise SartorisError(message=exit_codes[5], exit_code=5)
 
         # Remove lock file
         if os.listdir(self.DEPLOY_DIR).__contains__(self.LOCK_FILE_HANDLE):
@@ -325,9 +325,7 @@ class Sartoris(object):
         """
             * show a git diff of the last deploy and it's previous deploy
         """
-        raise NotImplementedError()
-
-
+        raise NotImplementedError
 
 def main(argv, out=None, err=None):
     """Main entry point.
