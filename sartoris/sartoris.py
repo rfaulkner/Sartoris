@@ -35,6 +35,8 @@ exit_codes = {
     3: 'Please enter valid arguments.',
     4: 'Missing lock file.',
     5: 'Could not reset.',
+    6: 'Diff failed.',
+    7: 'Missing tag(s).',
     20: 'Cannot find top level directory for the git repository. Exiting.',
     21: 'Missing system configuration item "hook-dir". Exiting.',
     22: 'Missing repo configuration item "tag-prefix". '
@@ -168,6 +170,20 @@ class Sartoris(object):
         """ Create a lock file """
         with open(self.DEPLOY_DIR + self.LOCK_FILE_HANDLE,'rb'): pass
 
+    def _get_commit_sha_for_tag(self, tag):
+        """ Obtain the commit sha of an associated tag
+                e.g. `git rev-list $TAG | head -n 1` """
+        # @TODO replace with dulwich
+
+        cmd = "git rev-list {0} | head -n 1".format(tag)
+        proc = subprocess.Popen(cmd.split(),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+        if not proc.returncode:
+            return proc.stdout.readline().strip()
+        else:
+            raise SartorisError(message=exit_codes[8], exit_code=8)
+
     def start(self, args):
         """
             * write a lock file
@@ -200,16 +216,8 @@ class Sartoris(object):
             * remove lock file
         """
 
-        # Reset state - e.g. `git rev-list $TAG | head -n 1`
-        # @TODO replace with dulwich
-        cmd = "git rev-list {0} | head -n 1".format(self._tag)
-        proc = subprocess.Popen(cmd.split(),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
-        if not proc.returncode:
-            commit_sha = proc.stdout.readline().strip()
-        else:
-            raise SartorisError(message=exit_codes[5], exit_code=5)
+        # Get the commit hash of the current tag
+        commit_sha = self._get_commit_sha_for_tag(self._tag)
 
         # 1. hard reset the index to the desired tree
         # 2. move the branch pointer back to the previous HEAD
@@ -325,7 +333,30 @@ class Sartoris(object):
         """
             * show a git diff of the last deploy and it's previous deploy
         """
-        raise NotImplementedError
+
+        # Get the last two tags - assumes tagging on deployment only
+        proc = subprocess.Popen("git tag | head -n 2".split())
+        if not proc.returncode:
+            tag_last = proc.stdout.readline().strip()
+            tag_second_last = proc.stdout.readline().strip()
+            if not tag_last or not tag_second_last:
+                raise SartorisError(message=exit_codes[7], exit_code=7)
+        else:
+            raise SartorisError(message=exit_codes[6], exit_code=6)
+
+        # Get the associated commit hashes for those tags
+        sha_1 = self._get_commit_sha_for_tag(tag_last)
+        sha_2 = self._get_commit_sha_for_tag(tag_second_last)
+
+        # Produce the diff
+        # @TODO replace with dulwich
+        proc = "git diff {0} {1}".format(sha_2, sha_1).split()
+        line = proc.stdout.readline()
+        while line:
+            print line
+            line = proc.stdout.readline()
+        return 0
+
 
 def main(argv, out=None, err=None):
     """Main entry point.
