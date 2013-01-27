@@ -350,7 +350,11 @@ class Sartoris(object):
 
         # Produce the diff
         # @TODO replace with dulwich
-        proc = "git diff {0} {1}".format(sha_2, sha_1).split()
+        proc = subprocess.Popen("git diff {0} {1}".format(sha_2, sha_1).
+            split(),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
         line = proc.stdout.readline()
         while line:
             print line
