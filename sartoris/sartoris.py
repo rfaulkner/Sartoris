@@ -49,14 +49,16 @@ exit_codes = {
     50: 'Failed to read the .deploy file. Exiting.',
 }
 
+
 class SartorisError(Exception):
     """ Basic exception class for UserMetric types """
-    def __init__(self, message="Git deploy error.",exit_code=1):
+    def __init__(self, message="Git deploy error.", exit_code=1):
         Exception.__init__(self, message)
         self._exit_code = int(exit_code)
 
     @property
-    def exit_code(self): return self._exit_code
+    def exit_code(self):
+        return self._exit_code
 
 # NullHandler was added in Python 3.1.
 try:
@@ -168,7 +170,8 @@ class Sartoris(object):
 
     def _create_lock(self):
         """ Create a lock file """
-        with open(self.DEPLOY_DIR + self.LOCK_FILE_HANDLE,'rb'): pass
+        with open(self.DEPLOY_DIR + self.LOCK_FILE_HANDLE, 'rb'):
+            pass
 
     def _get_commit_sha_for_tag(self, tag):
         """ Obtain the commit sha of an associated tag
@@ -177,8 +180,8 @@ class Sartoris(object):
 
         cmd = "git rev-list {0} | head -n 1".format(tag)
         proc = subprocess.Popen(cmd.split(),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
         if not proc.returncode:
             return proc.stdout.readline().strip()
         else:
@@ -228,7 +231,7 @@ class Sartoris(object):
         if subprocess.call("git reset --soft HEAD@{1}".split()):
             raise SartorisError(message=exit_codes[5], exit_code=5)
         if subprocess.call("git commit -m 'Revert to {0}'".format(commit_sha).
-            split()):
+                           split()):
             raise SartorisError(message=exit_codes[5], exit_code=5)
 
         # Remove lock file
@@ -351,10 +354,9 @@ class Sartoris(object):
         # Produce the diff
         # @TODO replace with dulwich
         proc = subprocess.Popen("git diff {0} {1}".format(sha_2, sha_1).
-            split(),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
+                                split(),
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
         line = proc.stdout.readline()
         while line:
             print line
