@@ -408,5 +408,9 @@ def main(argv, out=None, err=None):
         log.error(__name__ + '::No function called %(method)s.' % {
             'method': args.method})
 
-if __name__ == "__main__":  # pragma: nocover
+
+def cli():
     sys.exit(main(sys.argv))
+
+if __name__ == "__main__":  # pragma: nocover
+    cli()

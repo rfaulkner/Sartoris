@@ -16,7 +16,7 @@ meta = dict(
     author_email="info@wikimedia.org",
     url='https://github.com/wikimedia/sartoris',
     py_modules=['sartoris'],
-    entry_points={'console_scripts': ['sartoris = sartoris:main']},
+    entry_points={'console_scripts': ['sartoris = sartoris:cli']},
     install_requires=['dulwich'],
     keywords=['git', 'deploy', 'scripts', 'cli'],
     classifiers=[
