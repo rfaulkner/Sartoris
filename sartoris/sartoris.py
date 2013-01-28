@@ -162,7 +162,7 @@ class Sartoris(object):
             exit_code = 22
             log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
             sys.exit(exit_code)
-        self.config['sync_dir'] = '{0}/sync'.format(hook_dir)
+        self.config['sync_dir'] = '{0}/sync'.format(self.config['hook_dir'])
 
     def _check_lock(self):
         """ Returns boolean flag on lock file existence """
@@ -255,7 +255,7 @@ class Sartoris(object):
         repo_name = self.config['repo_name']
         _tag = "{0}-sync-{1}".format(repo_name,
                                      datetime.now().strftime(
-                                         DATE_TIME_TAG_FORMAT))
+                                         self.DATE_TIME_TAG_FORMAT))
         proc = subprocess.Popen(['/usr/bin/git tag', '-a', _tag])
         if proc.returncode != 0:
             exit_code = 31
@@ -382,9 +382,9 @@ def main(argv, out=None, err=None):
     if args.silent:
         level = logging.CRITICAL + 1
 
-    format = "%(asctime)s %(levelname)-8s %(message)s"
+    log_format = "%(asctime)s %(levelname)-8s %(message)s"
     handler = logging.StreamHandler(err)
-    handler.setFormatter(logging.Formatter(fmt=format,
+    handler.setFormatter(logging.Formatter(fmt=log_format,
                          datefmt='%b-%d %H:%M:%S'))
     log.addHandler(handler)
     log.setLevel(level)
