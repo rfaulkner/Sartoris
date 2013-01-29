@@ -24,6 +24,7 @@ import logging
 import argparse
 import os
 import sys
+from re import search
 import subprocess
 from dulwich.config import StackedConfig
 from datetime import datetime
@@ -145,19 +146,27 @@ class Sartoris(object):
         """ Parse configuration from git config """
         sc = StackedConfig(StackedConfig.default_backends())
         self.config = {}
-        proc = subprocess.Popen(['git', 'rev-parse', '--show-toplevel'])
+
+        # Get top level directory of project
+        proc = subprocess.Popen(['git', 'rev-parse', '--show-toplevel'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+        self.config['top_dir'] = proc.communicate()[0]
+
         if proc.returncode != 0:
             exit_code = 20
             log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
             sys.exit(exit_code)
-        self.config['top_dir'] = proc.stdout.read()
+
         self.config['deploy_file'] = self.config['top_dir'] + '/.git'
+
         try:
             self.config['hook_dir'] = sc.get('deploy', 'hook-dir')
         except KeyError:
             exit_code = 21
             log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
             sys.exit(exit_code)
+
         try:
             self.config['repo_name'] = sc.get('deploy', 'tag-prefix')
         except KeyError:
@@ -184,8 +193,10 @@ class Sartoris(object):
         proc = subprocess.Popen(cmd.split(),
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
+        tag = proc.communicate()[0].strip()
+
         if not proc.returncode:
-            return proc.stdout.readline().strip()
+            return tag
         else:
             raise SartorisError(message=exit_codes[8], exit_code=8)
 
@@ -259,6 +270,8 @@ class Sartoris(object):
                                      datetime.now().strftime(
                                          self.DATE_TIME_TAG_FORMAT))
         proc = subprocess.Popen(['/usr/bin/git tag', '-a', _tag])
+        proc.communicate()
+
         if proc.returncode != 0:
             exit_code = 31
             log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
@@ -283,7 +296,9 @@ class Sartoris(object):
                                      '--repo="{0}"'.format(repo_name),
                                      '--tag="{0}"'.format(_tag),
                                      '--force="{0}"'.format(force)])
-            log.info(proc.stdout.read())
+            proc_out = proc.communicate()[0]
+            log.info(proc_out)
+
             if proc.returncode != 0:
                 exit_code = 40
                 log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
@@ -329,8 +344,9 @@ class Sartoris(object):
 
         # Get latest "sync" tag
         proc = subprocess.Popen("git tag | grep sync | head -n 1".split())
+        tag_last = proc.communicate()[0].strip()
+
         if not proc.returncode:
-            tag_last = proc.stdout.readline().strip()
             if not tag_last:
                 raise SartorisError(message=exit_codes[8], exit_code=8)
             else:
@@ -352,7 +368,14 @@ class Sartoris(object):
         """
 
         # Get the last two tags - assumes tagging on deployment only
-        proc = subprocess.Popen("git tag | head -n 2".split())
+        proc = subprocess.Popen("git tag | head -n 2".split(),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,)
+
+        # Get the last two tags
+        tags = proc.communicate()[0].split('\n')
+
+        # Check the return code
         if not proc.returncode:
             tag_last = proc.stdout.readline().strip()
             tag_second_last = proc.stdout.readline().strip()
@@ -371,10 +394,15 @@ class Sartoris(object):
                                 split(),
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
-        line = proc.stdout.readline()
-        while line:
-            print line
+        proc.communicate()
+
+        if not proc.returncode:
             line = proc.stdout.readline()
+            while line:
+                print line
+                line = proc.stdout.readline()
+        else:
+            raise SartorisError(message=exit_codes[6], exit_code=6)
         return 0
 
 
