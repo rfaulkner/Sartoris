@@ -344,7 +344,9 @@ class Sartoris(object):
         """
 
         # Get latest "sync" tag
-        proc = subprocess.Popen("git tag".split())
+        proc = subprocess.Popen("git tag".split(),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
         tag_last = ''
         for line_out in proc.communicate()[0].split('\n'):
             if search(r'sync', line_out):
