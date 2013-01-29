@@ -343,16 +343,17 @@ class Sartoris(object):
         """
 
         # Get latest "sync" tag
-        proc = subprocess.Popen("git tag | grep sync | head -n 1".split())
-        tag_last = proc.communicate()[0].strip()
+        proc = subprocess.Popen("git tag".split())
+        tag_last = ''
+        for line_out in proc.communicate()[0].split('\n'):
+            if search(r'sync', line_out):
+                tag_last = line_out
 
-        if not proc.returncode:
-            if not tag_last:
-                raise SartorisError(message=exit_codes[8], exit_code=8)
-            else:
-                log.info(tag_last)
-        else:
+        if proc.returncode:
+            raise SartorisError(message=exit_codes[8], exit_code=8)
+        elif not tag_last:
             raise SartorisError(message=exit_codes[9], exit_code=9)
+        log.info(tag_last)
         return 0
 
 
