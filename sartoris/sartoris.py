@@ -28,6 +28,7 @@ from re import search
 import subprocess
 from dulwich.config import StackedConfig
 from datetime import datetime
+import json
 
 
 exit_codes = {
