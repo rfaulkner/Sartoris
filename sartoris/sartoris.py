@@ -368,25 +368,24 @@ class Sartoris(object):
         """
 
         # Get the last two tags - assumes tagging on deployment only
-        proc = subprocess.Popen("git tag | head -n 2".split(),
+        proc = subprocess.Popen("git tag".split(),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,)
 
         # Get the last two tags
-        tags = proc.communicate()[0].split('\n')
+        sync_tags = filter(lambda x: search(r'sync',x),
+            proc.communicate()[0].split('\n'))
 
-        # Check the return code
-        if not proc.returncode:
-            tag_last = proc.stdout.readline().strip()
-            tag_second_last = proc.stdout.readline().strip()
-            if not tag_last or not tag_second_last:
-                raise SartorisError(message=exit_codes[7], exit_code=7)
-        else:
+        # Check the return code & whether at least two sync tags were
+        # returned
+        if proc.returncode:
             raise SartorisError(message=exit_codes[6], exit_code=6)
+        elif len(sync_tags) < 2:
+            raise SartorisError(message=exit_codes[7], exit_code=7)
 
         # Get the associated commit hashes for those tags
-        sha_1 = self._get_commit_sha_for_tag(tag_last)
-        sha_2 = self._get_commit_sha_for_tag(tag_second_last)
+        sha_1 = self._get_commit_sha_for_tag(sync_tags[0])
+        sha_2 = self._get_commit_sha_for_tag(sync_tags[1])
 
         # Produce the diff
         # @TODO replace with dulwich
