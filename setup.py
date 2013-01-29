@@ -4,7 +4,7 @@
 import sys
 from setuptools import setup
 
-__version__ = '0.9-dev'
+__version__ = '0.1-dev'
 
 meta = dict(
     name='sartoris',
@@ -15,12 +15,12 @@ meta = dict(
     author="Wikimedia Foundation",
     author_email="info@wikimedia.org",
     url='https://github.com/wikimedia/sartoris',
-    py_modules=['sartoris'],
+    packages=['sartoris'],
     entry_points={'console_scripts': ['sartoris = sartoris:cli']},
     install_requires=['dulwich'],
     keywords=['git', 'deploy', 'scripts', 'cli'],
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 2 - Pre-Alpha",
         "Environment :: Console",
         "Intended Audience :: Developers",
         "Topic :: Utilities"
