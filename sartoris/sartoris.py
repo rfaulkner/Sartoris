@@ -150,8 +150,8 @@ class Sartoris(object):
 
         # Get top level directory of project
         proc = subprocess.Popen(['git', 'rev-parse', '--show-toplevel'],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
         self.config['top_dir'] = proc.communicate()[0]
 
         if proc.returncode != 0:
@@ -345,8 +345,8 @@ class Sartoris(object):
 
         # Get latest "sync" tag
         proc = subprocess.Popen("git tag".split(),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
         tag_last = ''
         for line_out in proc.communicate()[0].split('\n'):
             if search(r'sync', line_out):
@@ -358,7 +358,6 @@ class Sartoris(object):
             raise SartorisError(message=exit_codes[9], exit_code=9)
         log.info(tag_last)
         return 0
-
 
     def log_deploys(self, args):
         """
@@ -373,12 +372,12 @@ class Sartoris(object):
 
         # Get the last two tags - assumes tagging on deployment only
         proc = subprocess.Popen("git tag".split(),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,)
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,)
 
         # Get the last two tags
-        sync_tags = filter(lambda x: search(r'sync',x),
-            proc.communicate()[0].split('\n'))
+        sync_tags = filter(lambda x: search(r'sync', x),
+                           proc.communicate()[0].split('\n'))
 
         # Check the return code & whether at least two sync tags were
         # returned
