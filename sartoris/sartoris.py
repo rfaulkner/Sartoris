@@ -37,6 +37,8 @@ exit_codes = {
     5: 'Could not reset.',
     6: 'Diff failed.',
     7: 'Missing tag(s).',
+    8: 'Could not find last deploy.',
+    9: 'show_tag failed.',
     20: 'Cannot find top level directory for the git repository. Exiting.',
     21: 'Missing system configuration item "hook-dir". Exiting.',
     22: 'Missing repo configuration item "tag-prefix". '
@@ -324,7 +326,19 @@ class Sartoris(object):
         """
             * display current tagged release
         """
-        raise NotImplementedError()
+
+        # Get latest "sync" tag
+        proc = subprocess.Popen("git tag | grep sync | head -n 1".split())
+        if not proc.returncode:
+            tag_last = proc.stdout.readline().strip()
+            if not tag_last:
+                raise SartorisError(message=exit_codes[8], exit_code=8)
+            else:
+                log.info(tag_last)
+        else:
+            raise SartorisError(message=exit_codes[9], exit_code=9)
+        return 0
+
 
     def log_deploys(self, args):
         """
