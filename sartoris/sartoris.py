@@ -371,8 +371,8 @@ class Sartoris(object):
 
         # Get tags for project
         proc = subprocess.Popen("git tag".split(),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
 
         # Pull last 'num_tags' sync tags
         for tag in proc.communicate()[0].split('\n'):
