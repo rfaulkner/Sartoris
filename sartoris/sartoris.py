@@ -41,6 +41,7 @@ exit_codes = {
     7: 'Missing tag(s).',
     8: 'Could not find last deploy.',
     9: 'show_tag failed.',
+    10: 'Please specify number of deploy tags to emit with -c.',
     20: 'Cannot find top level directory for the git repository. Exiting.',
     21: 'Missing system configuration item "hook-dir". Exiting.',
     22: 'Missing repo configuration item "tag-prefix". '
@@ -104,6 +105,9 @@ def parseargs(argv):
 
     # Global options.
     parser.add_argument("method")
+    parser.add_argument("-c", "--count",
+                        default=defaults["quiet"], type=int,
+                        help="number of tags to log")
     parser.add_argument("-q", "--quiet",
                         default=defaults["quiet"], action="count",
                         help="decrease the logging verbosity")
@@ -363,7 +367,25 @@ class Sartoris(object):
         """
             * show last x deploys
         """
-        raise NotImplementedError()
+        # Get number of deploy tags to emit
+        try:
+            num_tags = args.count
+        except NameError:
+            raise SartorisError(message=exit_codes[10], exit_code=10)
+
+        # Get tags for project
+        proc = subprocess.Popen("git tag".split(),
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+
+        # Pull last 'num_tags' sync tags
+        for tag in proc.communicate()[0].split('\n'):
+            if not num_tags:
+                break
+            if search(r'sync', tag):
+                log.info(tag)
+                num_tags -= 1
+        return 0
 
     def diff(self, args):
         """
