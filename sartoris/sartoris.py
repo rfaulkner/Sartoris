@@ -41,6 +41,7 @@ exit_codes = {
     7: 'Missing tag(s).',
     8: 'Could not find last deploy.',
     9: 'show_tag failed.',
+    10: 'Please specify number of deploy tags to emit with -c.',
     20: 'Cannot find top level directory for the git repository. Exiting.',
     21: 'Missing system configuration item "hook-dir". Exiting.',
     22: 'Missing repo configuration item "tag-prefix". '
@@ -104,6 +105,9 @@ def parseargs(argv):
 
     # Global options.
     parser.add_argument("method")
+    parser.add_argument("-c", "--count",
+                        default=defaults["quiet"], type=int,
+                        help="number of tags to log")
     parser.add_argument("-q", "--quiet",
                         default=defaults["quiet"], action="count",
                         help="decrease the logging verbosity")
