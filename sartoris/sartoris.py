@@ -34,13 +34,12 @@ import json
 exit_codes = {
     1: 'Operation failed.  Exiting.',
     2: 'A deployment has already been started.  Exiting.',
-    3: 'Please enter valid arguments.',
-    4: 'Missing lock file.',
-    5: 'Could not reset.',
-    6: 'Diff failed.',
-    7: 'Missing tag(s).',
-    8: 'Could not find last deploy.',
-    9: 'show_tag failed.',
+    3: 'Please enter valid arguments.  Exiting.',
+    4: 'Missing lock file.  Exiting.',
+    5: 'Could not reset.  Exiting.',
+    6: 'Diff failed.  Exiting.',
+    7: 'Missing tag(s).  Exiting.',
+    8: 'Could not find last deploy tag.  Exiting.',
     10: 'Please specify number of deploy tags to emit with -c.',
     11: 'Could not find any deploys.',
     20: 'Cannot find top level directory for the git repository. Exiting.',
@@ -218,8 +217,10 @@ class Sartoris(object):
             if search(r'sync', line_out):
                 self._tag = line_out
 
-        if not self._tag:
-            raise SartorisError(message=exit_codes[10], exit_code=10)
+        if proc.returncode:
+            raise SartorisError(message=exit_codes[8], exit_code=8)
+        elif not self._tag:
+            raise SartorisError(message=exit_codes[8], exit_code=8)
         return 0
 
     def start(self, args):
