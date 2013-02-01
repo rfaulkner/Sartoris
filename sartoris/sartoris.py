@@ -340,7 +340,40 @@ class Sartoris(object):
             * call sync hook with the prefix (repo) and tag info
             * remove lock file
         """
-        raise NotImplementedError()
+        # Create lock file - check if it already exists
+        # @TODO catch exceptions for any os callable attributes
+        if self._check_lock():
+            raise SartorisError(message=exit_codes[2])
+
+        repo_name = self.config['repo_name']
+
+        # Get latest "sync" tag
+        proc = subprocess.Popen("git tag".split(),
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+        self._tag = ''
+        for line_out in proc.communicate()[0].split('\n'):
+            if search(r'sync', line_out):
+                self._tag = line_out
+
+        # Write .deploy file
+        try:
+            deploy_file = open(self.config['deploy_file'], 'w')
+            deploy_file.write(json.dumps({'repo': repo_name,
+                                          'tag': self._tag}))
+            deploy_file.close()
+        except OSError:
+            exit_code = 32
+            log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
+            return exit_code
+        self._sync()
+
+        # Remove lock file
+        if os.listdir(self.DEPLOY_DIR).__contains__(self.LOCK_FILE_HANDLE):
+            os.remove(self.LOCK_FILE_HANDLE)
+        else:
+            raise SartorisError(message=exit_codes[4])
+        return 0
 
     def show_tag(self, args):
         """
