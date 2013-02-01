@@ -42,6 +42,7 @@ exit_codes = {
     8: 'Could not find last deploy.',
     9: 'show_tag failed.',
     10: 'Please specify number of deploy tags to emit with -c.',
+    11: 'Could not find any deploys.',
     20: 'Cannot find top level directory for the git repository. Exiting.',
     21: 'Missing system configuration item "hook-dir". Exiting.',
     22: 'Missing repo configuration item "tag-prefix". '
@@ -205,6 +206,22 @@ class Sartoris(object):
         else:
             raise SartorisError(message=exit_codes[8], exit_code=8)
 
+    def _get_latest_deploy_tag(self):
+        """ Returns the latest tag containing 'sync'
+            Sets self._tag to tag string
+        """
+        proc = subprocess.Popen("git tag".split(),
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+        self._tag = None
+        for line_out in proc.communicate()[0].split('\n'):
+            if search(r'sync', line_out):
+                self._tag = line_out
+
+        if not self._tag:
+            raise SartorisError(message=exit_codes[10], exit_code=10)
+        return 0
+
     def start(self, args):
         """
             * write a lock file
@@ -347,14 +364,8 @@ class Sartoris(object):
 
         repo_name = self.config['repo_name']
 
-        # Get latest "sync" tag
-        proc = subprocess.Popen("git tag".split(),
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
-        self._tag = ''
-        for line_out in proc.communicate()[0].split('\n'):
-            if search(r'sync', line_out):
-                self._tag = line_out
+        # Get latest "sync" tag - sets self._tag
+        self._get_latest_deploy_tag()
 
         # Write .deploy file
         try:
@@ -366,7 +377,8 @@ class Sartoris(object):
             exit_code = 32
             log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
             return exit_code
-        self._sync()
+
+        self._sync(self._tag)
 
         # Remove lock file
         if os.listdir(self.DEPLOY_DIR).__contains__(self.LOCK_FILE_HANDLE):
@@ -379,21 +391,9 @@ class Sartoris(object):
         """
             * display current tagged release
         """
-
-        # Get latest "sync" tag
-        proc = subprocess.Popen("git tag".split(),
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
-        tag_last = ''
-        for line_out in proc.communicate()[0].split('\n'):
-            if search(r'sync', line_out):
-                tag_last = line_out
-
-        if proc.returncode:
-            raise SartorisError(message=exit_codes[8], exit_code=8)
-        elif not tag_last:
-            raise SartorisError(message=exit_codes[9], exit_code=9)
-        log.info(tag_last)
+        # Get latest "sync" tag - sets self._tag
+        self._get_latest_deploy_tag()
+        log.info(self._tag)
         return 0
 
     def log_deploys(self, args):
