@@ -378,7 +378,8 @@ class Sartoris(object):
             log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
             return exit_code
 
-        self._sync(self._tag)
+        # @TODO determine what to pass as arg 2
+        self._sync(self._tag, '')
 
         # Remove lock file
         if os.listdir(self.DEPLOY_DIR).__contains__(self.LOCK_FILE_HANDLE):
