@@ -27,9 +27,11 @@ import sys
 from re import search
 import subprocess
 from dulwich.config import StackedConfig
+from dulwich.repo import Repo
+from dulwich.objects import Blob, Tree, Commit, parse_timezone, Tag
 from datetime import datetime
 import json
-
+from time import time
 
 exit_codes = {
     1: 'Operation failed.  Exiting.',
@@ -222,6 +224,51 @@ class Sartoris(object):
         elif not self._tag:
             raise SartorisError(message=exit_codes[8], exit_code=8)
         return 0
+
+    def _dulwich_tag(self, tag, author, message=None):
+        """ Creates a tag in git via dulwich calls:
+
+                **tag** - string :: "<project>-[start|sync]-<timestamp>"
+                **author** - string :: "Your Name <your.email@example.com>"
+        """
+        if not message:
+            message = tag
+
+        # Open the repo
+        _repo = Repo(self.config['top_dir'] )
+        master_branch = 'master'
+
+        # Build the commit object
+        blob = Blob.from_string("empty")
+        tree = Tree()
+        tree.add(tag, 0100644, blob.id)
+
+        commit = Commit()
+        commit.tree = tree.id
+        commit.author = commit.committer = author
+        commit.commit_time = commit.author_time = int(time())
+        tz = parse_timezone('-0200')[0]
+        commit.commit_timezone = commit.author_timezone = tz
+        commit.encoding = "UTF-8"
+        commit.message = 'Tagging repo for deploy: ' + message
+
+        # Add objects to the repo store instance
+        object_store = _repo.object_store
+        object_store.add_object(blob)
+        object_store.add_object(tree)
+        object_store.add_object(commit)
+        _repo.refs['refs/heads/' + master_branch] = commit.id
+
+        # Build the tag object and tag
+        tag = Tag()
+        tag.tagger = author
+        tag.message = message
+        tag.name = tag
+        tag.object = (Commit, commit.id)
+        tag.tag_time = commit.author_time
+        tag.tag_timezone = tz
+        object_store.add_object(tag)
+        _repo['refs/tags/' + tag] = tag.id
 
     def start(self, args):
         """
@@ -515,3 +562,7 @@ def cli():
 
 if __name__ == "__main__":  # pragma: nocover
     cli()
+
+
+
+
