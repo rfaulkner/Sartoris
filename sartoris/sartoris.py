@@ -42,8 +42,9 @@ exit_codes = {
     6: 'Diff failed.  Exiting.',
     7: 'Missing tag(s).  Exiting.',
     8: 'Could not find last deploy tag.  Exiting.',
-    10: 'Please specify number of deploy tags to emit with -c.',
-    11: 'Could not find any deploys.',
+    10: 'Please specify number of deploy tags to emit with -c.  Exiting',
+    11: 'Could not find any deploys.  Exiting',
+    12: 'dulwich call failed. Exiting',
     20: 'Cannot find top level directory for the git repository. Exiting.',
     21: 'Missing system configuration item "hook-dir". Exiting.',
     22: 'Missing repo configuration item "tag-prefix". '
@@ -235,7 +236,7 @@ class Sartoris(object):
             message = tag
 
         # Open the repo
-        _repo = Repo(self.config['top_dir'] )
+        _repo = Repo(self.config['top_dir'])
         master_branch = 'master'
 
         # Build the commit object
@@ -291,9 +292,16 @@ class Sartoris(object):
         log.debug(__name__ + '::Adding `start` tag for repo.')
 
         timestamp = datetime.now().strftime(self.DATE_TIME_TAG_FORMAT)
+
+        # @TODO use dulwich config to set '_author'
         _tag = '{0}-start-{1}'.format(repo_name, timestamp)
-        subprocess.call(['git', 'tag', '-a', _tag, '-m',
-                         '"Tag for {0}"'.format(repo_name)])
+        _author = '{0} {1}'.format('author', 'author@domain.com')
+
+        try:
+            self._dulwich_tag(_tag, _author)
+        except Exception:
+            raise SartorisError(message=exit_codes[12], exit_code=12)
+
         return 0
 
     def abort(self, args):
@@ -562,7 +570,3 @@ def cli():
 
 if __name__ == "__main__":  # pragma: nocover
     cli()
-
-
-
-
