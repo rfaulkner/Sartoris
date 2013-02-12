@@ -27,9 +27,11 @@ import sys
 from re import search
 import subprocess
 from dulwich.config import StackedConfig
+from dulwich.repo import Repo
+from dulwich.objects import Blob, Tree, Commit, parse_timezone, Tag
 from datetime import datetime
 import json
-
+from time import time
 
 exit_codes = {
     1: 'Operation failed.  Exiting.',
@@ -40,8 +42,9 @@ exit_codes = {
     6: 'Diff failed.  Exiting.',
     7: 'Missing tag(s).  Exiting.',
     8: 'Could not find last deploy tag.  Exiting.',
-    10: 'Please specify number of deploy tags to emit with -c.',
-    11: 'Could not find any deploys.',
+    10: 'Please specify number of deploy tags to emit with -c.  Exiting',
+    11: 'Could not find any deploys.  Exiting',
+    12: 'dulwich call failed. Exiting',
     20: 'Cannot find top level directory for the git repository. Exiting.',
     21: 'Missing system configuration item "hook-dir". Exiting.',
     22: 'Missing repo configuration item "tag-prefix". '
@@ -186,7 +189,7 @@ class Sartoris(object):
 
     def _create_lock(self):
         """ Create a lock file """
-        with open(self.DEPLOY_DIR + self.LOCK_FILE_HANDLE, 'rb'):
+        with open(self.DEPLOY_DIR + self.LOCK_FILE_HANDLE, 'wb'):
             pass
 
     def _get_commit_sha_for_tag(self, tag):
@@ -223,6 +226,51 @@ class Sartoris(object):
             raise SartorisError(message=exit_codes[8], exit_code=8)
         return 0
 
+    def _dulwich_tag(self, tag, author, message=None):
+        """ Creates a tag in git via dulwich calls:
+
+                **tag** - string :: "<project>-[start|sync]-<timestamp>"
+                **author** - string :: "Your Name <your.email@example.com>"
+        """
+        if not message:
+            message = tag
+
+        # Open the repo
+        _repo = Repo(self.config['top_dir'])
+        master_branch = 'master'
+
+        # Build the commit object
+        blob = Blob.from_string("empty")
+        tree = Tree()
+        tree.add(tag, 0100644, blob.id)
+
+        commit = Commit()
+        commit.tree = tree.id
+        commit.author = commit.committer = author
+        commit.commit_time = commit.author_time = int(time())
+        tz = parse_timezone('-0200')[0]
+        commit.commit_timezone = commit.author_timezone = tz
+        commit.encoding = "UTF-8"
+        commit.message = 'Tagging repo for deploy: ' + message
+
+        # Add objects to the repo store instance
+        object_store = _repo.object_store
+        object_store.add_object(blob)
+        object_store.add_object(tree)
+        object_store.add_object(commit)
+        _repo.refs['refs/heads/' + master_branch] = commit.id
+
+        # Build the tag object and tag
+        tag = Tag()
+        tag.tagger = author
+        tag.message = message
+        tag.name = tag
+        tag.object = (Commit, commit.id)
+        tag.tag_time = commit.author_time
+        tag.tag_timezone = tz
+        object_store.add_object(tag)
+        _repo['refs/tags/' + tag] = tag.id
+
     def start(self, args):
         """
             * write a lock file
@@ -244,9 +292,16 @@ class Sartoris(object):
         log.debug(__name__ + '::Adding `start` tag for repo.')
 
         timestamp = datetime.now().strftime(self.DATE_TIME_TAG_FORMAT)
+
+        # @TODO use dulwich config to set '_author'
         _tag = '{0}-start-{1}'.format(repo_name, timestamp)
-        subprocess.call(['git', 'tag', '-a', _tag, '-m',
-                         '"Tag for {0}"'.format(repo_name)])
+        _author = '{0} {1}'.format('author', 'author@domain.com')
+
+        try:
+            self._dulwich_tag(_tag, _author)
+        except Exception:
+            raise SartorisError(message=exit_codes[12], exit_code=12)
+
         return 0
 
     def abort(self, args):
