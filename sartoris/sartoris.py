@@ -189,7 +189,7 @@ class Sartoris(object):
 
     def _create_lock(self):
         """ Create a lock file """
-        with open(self.DEPLOY_DIR + self.LOCK_FILE_HANDLE, 'rb'):
+        with open(self.DEPLOY_DIR + self.LOCK_FILE_HANDLE, 'wb'):
             pass
 
     def _get_commit_sha_for_tag(self, tag):
