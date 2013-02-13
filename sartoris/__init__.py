@@ -9,7 +9,6 @@
     see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
-import sys
-from sartoris import *
+
 # the version.  Usually set automatically by a script.
 __version__ = '0.9-dev'
