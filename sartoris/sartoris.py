@@ -372,7 +372,7 @@ class Sartoris(object):
         if os.path.exists(sync_script):
             proc = subprocess.Popen([sync_script,
                                      '--repo="{0}"'.format(repo_name),
-                                     '--tag="{0}"'.format(_tag),
+                                     '--tag="{0}"'.format(self._tag),
                                      '--force="{0}"'.format(force)])
             proc_out = proc.communicate()[0]
             log.info(proc_out)
@@ -404,7 +404,7 @@ class Sartoris(object):
             exit_code = 50
             log.error("{0}::{1}".format(__name__, exit_codes[exit_code]))
             return exit_code
-        return self._sync(repo_name, deploy_info["tag"], self.config(force))
+        return self._sync(repo_name, deploy_info["tag"])
 
     def revert(self, args):
         """
