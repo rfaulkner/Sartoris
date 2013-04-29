@@ -9,7 +9,7 @@
 """
 
 import unittest
-import sartoris
+from sartoris.sartoris import Sartoris, SartorisError
 
 
 class TestNullHandler(unittest.TestCase):
@@ -28,19 +28,19 @@ class TestParseargs(unittest.TestCase):
 class TestSartorisInit(unittest.TestCase):
     """ Test cases for Sartoris initialization and config """
     def test_conf_hook_dir(self):
-        s = sartoris.Sartoris()
+        s = Sartoris()
         assert 'top_dir' in s.config
 
     def test_conf_top_dir(self):
-        s = sartoris.Sartoris()
+        s = Sartoris()
         assert 'hook_dir' in s.config
 
     def test_conf_repo_name(self):
-        s = sartoris.Sartoris()
+        s = Sartoris()
         assert 'repo_name' in s.config
 
     def test_conf_deploy_file(self):
-        s = sartoris.Sartoris()
+        s = Sartoris()
         assert 'deploy_file' in s.config
 
     def test___new__(self):
@@ -80,9 +80,10 @@ class TestSartorisFunctionality(unittest.TestCase):
         assert False  # TODO: implement your test here
 
     def test_start(self):
-        # sartoris = Sartoris(*args, **kwargs)
-        # self.assertEqual(expected, sartoris.start(args))
-        assert False  # TODO: implement your test here
+        """
+        Simple test to ensure that start method functions without exception
+        """
+        assert False
 
     def test_sync(self):
         # sartoris = Sartoris(*args, **kwargs)
