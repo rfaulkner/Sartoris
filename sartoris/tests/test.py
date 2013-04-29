@@ -81,9 +81,14 @@ class TestSartorisFunctionality(unittest.TestCase):
 
     def test_start(self):
         """
-        Simple test to ensure that start method functions without exception
+        start - test to ensure that start method functions
+        without exception
         """
-        assert False
+        sartoris_obj = Sartoris()
+        try:
+            sartoris_obj.start(None)
+        except SartorisError:
+            assert False
 
     def test_sync(self):
         # sartoris = Sartoris(*args, **kwargs)
