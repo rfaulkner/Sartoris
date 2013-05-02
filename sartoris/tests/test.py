@@ -49,37 +49,63 @@ class TestSartorisInit(unittest.TestCase):
 
 
 class TestSartorisFunctionality(unittest.TestCase):
+
     def test_abort(self):
-        # sartoris = Sartoris(*args, **kwargs)
-        # self.assertEqual(expected, sartoris.abort(args))
-        assert False  # TODO: implement your test here
+        """
+        abort - test to ensure that ``abort`` method functions
+        without exception
+        """
+        sartoris_obj = Sartoris()
+        try:
+            sartoris_obj.abort(None)
+        except SartorisError:
+            assert False
 
     def test_diff(self):
-        # sartoris = Sartoris(*args, **kwargs)
-        # self.assertEqual(expected, sartoris.diff(args))
-        assert False  # TODO: implement your test here
+        """
+        diff - test to ensure that ``diff`` method functions
+        without exception
+        """
+        sartoris_obj = Sartoris()
+        try:
+            sartoris_obj.diff(None)
+        except SartorisError:
+            assert False
 
     def test_log_deploys(self):
-        # sartoris = Sartoris(*args, **kwargs)
-        # self.assertEqual(expected, sartoris.log_deploys(args))
-        assert False  # TODO: implement your test here
+        """
+        log_deploys - test to ensure that ``log_deploys`` method functions
+        without exception
+        """
+        sartoris_obj = Sartoris()
+        try:
+            sartoris_obj.log_deploys(None)
+        except SartorisError:
+            assert False
 
     def test_resync(self):
-        # sartoris = Sartoris(*args, **kwargs)
-        # self.assertEqual(expected, sartoris.resync(args))
-        assert False  # TODO: implement your test here
+        """
+        resync - test to ensure that ``resync`` method functions
+        without exception
+        """
+        sartoris_obj = Sartoris()
+        try:
+            sartoris_obj.resync(None)
+        except SartorisError:
+            assert False
 
     def test_revert(self):
-        # sartoris = Sartoris(*args, **kwargs)
-        # self.assertEqual(expected, sartoris.revert(args))
-        assert False  # TODO: implement your test here
+        """
+        revert - test to ensure that ``revert`` method functions
+        without exception
+        """
+        sartoris_obj = Sartoris()
+        try:
+            sartoris_obj.revert(None)
+        except SartorisError:
+            assert False
 
     def test_show_tag(self):
-        # sartoris = Sartoris(*args, **kwargs)
-        # self.assertEqual(expected, sartoris.show_tag(args))
-        assert False  # TODO: implement your test here
-
-    def test_start(self):
         """
         start - test to ensure that start method functions
         without exception
@@ -90,10 +116,27 @@ class TestSartorisFunctionality(unittest.TestCase):
         except SartorisError:
             assert False
 
+    def test_start(self):
+        """
+        start - test to ensure that ``start`` method functions
+        without exception
+        """
+        sartoris_obj = Sartoris()
+        try:
+            sartoris_obj.start(None)
+        except SartorisError:
+            assert False
+
     def test_sync(self):
-        # sartoris = Sartoris(*args, **kwargs)
-        # self.assertEqual(expected, sartoris.sync(args, no_deps, force))
-        assert False  # TODO: implement your test here
+        """
+        sync - test to ensure that ``sync`` method functions
+        without exception
+        """
+        sartoris_obj = Sartoris()
+        try:
+            sartoris_obj.sync(None)
+        except SartorisError:
+            assert False
 
 
 class TestMain(unittest.TestCase):
