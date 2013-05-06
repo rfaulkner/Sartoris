@@ -12,6 +12,26 @@ import unittest
 from sartoris.sartoris import Sartoris, SartorisError, exit_codes
 
 
+def tester_deco(test_method):
+    """
+    Performs setup and teardown calls for all tests to decouple the state if
+    the repo from this testing module.
+    """
+    def tester_wrap(self):
+        init_test_repo()
+        test_method(self)
+        teardown_test_repo()
+    return tester_wrap
+
+
+def init_test_repo():
+    pass
+
+
+def teardown_test_repo():
+    pass
+
+
 class TestNullHandler(unittest.TestCase):
     def test_emit(self):
         # null_handler = NullHandler()
@@ -138,6 +158,7 @@ class TestSartorisFunctionality(unittest.TestCase):
         except SartorisError:
             assert False
 
+    @tester_deco
     def test_deploy_in_progress(self):
         """
         deploy_in_progress - test to ensure that when the ``start`` method
