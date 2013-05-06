@@ -9,7 +9,7 @@
 """
 
 import unittest
-from sartoris.sartoris import Sartoris, SartorisError
+from sartoris.sartoris import Sartoris, SartorisError, exit_codes
 
 
 class TestNullHandler(unittest.TestCase):
@@ -137,6 +137,25 @@ class TestSartorisFunctionality(unittest.TestCase):
             sartoris_obj.sync(None)
         except SartorisError:
             assert False
+
+    def test_deploy_in_progress(self):
+        """
+        deploy_in_progress - test to ensure that when the ``start`` method
+        is called when a deployment is in progress Sartoris exits with error
+        """
+        sartoris_obj = Sartoris()
+
+        # TODO - ensure that the repo is "fresh"
+
+        # Call ``start`` twice
+        try:
+            sartoris_obj.start(None)
+            sartoris_obj.start(None)
+        except SartorisError as e:
+            if not e.msg == exit_codes[2]:
+                assert False
+            return
+        assert False
 
 
 class TestMain(unittest.TestCase):
