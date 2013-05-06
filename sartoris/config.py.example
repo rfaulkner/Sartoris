@@ -1,0 +1,3 @@
+
+TEST_REPO = '/tmp/sartoris_test'
+SARTORIS_HOME = '/usr/local/projects/Sartoris/'
