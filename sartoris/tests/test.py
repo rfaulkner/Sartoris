@@ -10,6 +10,10 @@
 
 import unittest
 from sartoris.sartoris import Sartoris, SartorisError, exit_codes
+from sartoris import config
+from dulwich.repo import Repo
+from os import mkdir, chdir
+from shutil import rmtree
 
 
 def tester_deco(test_method):
@@ -25,11 +29,20 @@ def tester_deco(test_method):
 
 
 def init_test_repo():
-    pass
+    """
+    Create a test repo, change to directory
+    """
+    mkdir(config.TEST_REPO)
+    Repo.init(config.TEST_REPO)
+    chdir(config.TEST_REPO)
 
 
 def teardown_test_repo():
-    pass
+    """
+    Remove the test repo
+    """
+    chdir(config.SARTORIS_HOME)
+    rmtree(config.TEST_REPO)
 
 
 class TestNullHandler(unittest.TestCase):
