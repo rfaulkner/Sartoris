@@ -171,6 +171,7 @@ class TestSartorisFunctionality(unittest.TestCase):
         except SartorisError:
             assert False
 
+    @tester_deco
     def test_sync(self):
         """
         sync - test to ensure that ``sync`` method functions
@@ -178,7 +179,10 @@ class TestSartorisFunctionality(unittest.TestCase):
         """
         sartoris_obj = Sartoris()
         try:
+            sartoris_obj.start(None)
             sartoris_obj.sync(None)
+
+            # TODO - check tag and deploy file
         except SartorisError:
             assert False
 
