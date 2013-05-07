@@ -83,6 +83,7 @@ class TestSartorisInit(unittest.TestCase):
 
 class TestSartorisFunctionality(unittest.TestCase):
 
+    @tester_deco
     def test_abort(self):
         """
         abort - test to ensure that ``abort`` method functions
@@ -90,7 +91,12 @@ class TestSartorisFunctionality(unittest.TestCase):
         """
         sartoris_obj = Sartoris()
         try:
+            sartoris_obj.start(None)
+            sartoris_obj.sync(None)
             sartoris_obj.abort(None)
+
+            # TODO - check lock file & commit
+
         except SartorisError:
             assert False
 
@@ -149,6 +155,7 @@ class TestSartorisFunctionality(unittest.TestCase):
         except SartorisError:
             assert False
 
+    @tester_deco
     def test_start(self):
         """
         start - test to ensure that ``start`` method functions
