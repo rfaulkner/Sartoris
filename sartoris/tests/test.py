@@ -144,6 +144,7 @@ class TestSartorisFunctionality(unittest.TestCase):
         except SartorisError:
             assert False
 
+    @tester_deco
     def test_show_tag(self):
         """
         start - test to ensure that start method functions
@@ -152,6 +153,9 @@ class TestSartorisFunctionality(unittest.TestCase):
         sartoris_obj = Sartoris()
         try:
             sartoris_obj.start(None)
+            sartoris_obj.sync(None)
+            sartoris_obj.show_tag(None)
+
         except SartorisError:
             assert False
 
